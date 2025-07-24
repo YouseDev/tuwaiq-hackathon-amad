@@ -1,51 +1,67 @@
 {
-  "expo": {
-    "name": "echoPay",
-    "slug": "echoPay",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "echopay",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.yousef54ai.echoPay"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true,
-      "package": "com.yousef54ai.echoPay"
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
-    "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+    "expo": {
+        "name": "echoPay",
+        "slug": "echoPay",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./assets/images/icon.png",
+        "scheme": "echopay",
+        "userInterfaceStyle": "automatic",
+        "newArchEnabled": true,
+        "ios": {
+            "supportsTablet": true,
+            "infoPlist": {
+                "NSSpeechRecognitionUsageDescription": "This app uses speech recognition for voice banking commands in Arabic.",
+                "NSMicrophoneUsageDescription": "This app uses the microphone to recognize voice commands for secure banking operations."
+            },
+            "bundleIdentifier": "com.yousef54ai.echoPay"
+        },
+        "android": {
+            "adaptiveIcon": {
+                "foregroundImage": "./assets/images/adaptive-icon.png",
+                "backgroundColor": "#ffffff"
+            },
+            "edgeToEdgeEnabled": true,
+            "permissions": ["android.permission.RECORD_AUDIO"],
+            "package": "com.yousef54ai.echoPay"
+        },
+        "web": {
+            "bundler": "metro",
+            "output": "static",
+            "favicon": "./assets/images/favicon.png"
+        },
+        "plugins": [
+            "expo-router",
+            [
+                "expo-splash-screen",
+                {
+                    "image": "./assets/images/splash-icon.png",
+                    "imageWidth": 200,
+                    "resizeMode": "contain",
+                    "backgroundColor": "#ffffff"
+                }
+            ],
+            [
+                "expo-speech-recognition",
+                {
+                    "microphonePermission": "This app uses the microphone to recognize voice commands for secure banking operations.",
+                    "speechRecognitionPermission": "This app uses speech recognition for voice banking commands in Arabic."
+                }
+            ],
+            "expo-font"
+        ],
+        "experiments": {
+            "typedRoutes": true
+        },
+        "permissions": [
+            "android.permission.RECORD_AUDIO",
+            "android.permission.INTERNET"
+        ],
+        "extra": {
+            "router": {},
+            "eas": {
+                "projectId": "faf8558b-66cc-4fb1-bb0b-566463c42061"
+            }
         }
-      ],
-      "expo-font"
-    ],
-    "experiments": {
-      "typedRoutes": true
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "faf8558b-66cc-4fb1-bb0b-566463c42061"
-      }
     }
-  }
 }

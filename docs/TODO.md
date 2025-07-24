@@ -2,7 +2,7 @@
 -   [x] Setup DATA
 -   [ ] Setup STT
 -   [ ] Setup LLM
--   [ ] Setup TTS
+-   [x] Setup TTS
 -   [ ] Setup UI
 -   [ ] TEST
 -   [ ] Setup Presntation

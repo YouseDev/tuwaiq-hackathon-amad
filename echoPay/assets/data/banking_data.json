@@ -386,5 +386,112 @@
             "lastTransfer": "2023-12-28",
             "frequentAmount": 150
         }
+    ],
+    "creditCards": [
+        {
+            "id": "card_001",
+            "cardNumber": "4532 **** **** 1234",
+            "cardType": "البطاقة الائتمانية البلاتينية",
+            "cardTypeEn": "Platinum Credit Card",
+            "status": "نشطة",
+            "creditLimit": 15000.0,
+            "availableCredit": 12450.0,
+            "usedCredit": 2550.0,
+            "currency": "SAR",
+            "issueDate": "2023-03-15",
+            "expiryDate": "2027-03-31",
+            "lastStatementDate": "2024-01-01",
+            "minimumPayment": 127.5,
+            "currentBalance": 2550.0,
+            "loyaltyProgram": "برنامج الولاء أكثر",
+            "benefits": [
+                "بدون رسوم سنوية",
+                "اكسب نقاط عبر برنامج الولاء أكثر",
+                "إصدار بطاقة إضافية لأفراد الأسرة",
+                "دخول إلى صالات المطارات"
+            ],
+            "monthlyStatement": {
+                "previousBalance": 2245.0,
+                "newCharges": 485.5,
+                "payments": -180.5,
+                "currentBalance": 2550.0,
+                "dueDate": "2024-02-15"
+            }
+        },
+        {
+            "id": "card_002",
+            "cardNumber": "5431 **** **** 5678",
+            "cardType": "الإنماء الفرسان البلاتينية",
+            "cardTypeEn": "Alinma Al-Farsan Platinum",
+            "status": "نشطة",
+            "creditLimit": 8000.0,
+            "availableCredit": 7320.0,
+            "usedCredit": 680.0,
+            "currency": "SAR",
+            "issueDate": "2023-08-20",
+            "expiryDate": "2027-08-31",
+            "lastStatementDate": "2024-01-01",
+            "minimumPayment": 34.0,
+            "currentBalance": 680.0,
+            "loyaltyProgram": "أميال الفرسان",
+            "milesBalance": 8450,
+            "benefits": [
+                "10,000 ميل ترحيبي",
+                "1 ميل دوليًا مقابل كل 3 ريال",
+                "1 ميل محليًا مقابل كل 4 ريال",
+                "دخول إلى صالات المطارات"
+            ],
+            "monthlyStatement": {
+                "previousBalance": 520.0,
+                "newCharges": 240.0,
+                "payments": -80.0,
+                "currentBalance": 680.0,
+                "milesEarned": 75,
+                "dueDate": "2024-02-18"
+            }
+        }
+    ],
+    "cardOffers": [
+        {
+            "id": "offer_001",
+            "cardType": "البطاقة الائتمانية إنفينيت",
+            "cardTypeEn": "Infinite Credit Card",
+            "description": "بطاقة الإنماء الائتمانية إنفينيت تمنحك عالم من الفخامة والتميز",
+            "benefits": [
+                "بدون رسوم سنوية",
+                "اكسب نقاط عبر برنامج الولاء أكثر",
+                "إصدار بطاقة إضافية لأفراد الأسرة",
+                "+1,000 دخول مجاني إلى صالات المطارات"
+            ],
+            "eligibility": "راتب شهري 12,000 ريال أو أكثر",
+            "applicationStatus": "مؤهل للتقديم"
+        },
+        {
+            "id": "offer_002",
+            "cardType": "الإنماء الفرسان إنفينيت",
+            "cardTypeEn": "Alinma Al-Farsan Infinite",
+            "description": "بطاقة الفرسان الائتمانية إنفينيت تمنحك 45,000 ميل كمكافأة ترحيبية",
+            "benefits": [
+                "45,000 ميل ترحيبي",
+                "1 ميل دوليًا مقابل كل ريال",
+                "1 ميل محليًا مقابل كل 2.5 ريال",
+                "+1,000 دخول مجاني إلى صالات المطارات"
+            ],
+            "eligibility": "راتب شهري 15,000 ريال أو أكثر",
+            "applicationStatus": "مؤهل للتقديم"
+        },
+        {
+            "id": "offer_003",
+            "cardType": "بطاقة المسافر",
+            "cardTypeEn": "Traveler Card",
+            "description": "بطاقة متعددة العملات تقدم تجربة سفر مميزة",
+            "benefits": [
+                "اصدار فوري",
+                "سعر صرف ثابت للدولار الأمريكي بقيمة 3.75 ريال",
+                "بدون رسوم العمليات الدولية للمشتريات التي تتم بنفس عملة البطاقة"
+            ],
+            "eligibility": "راتب شهري 5,000 ريال أو أكثر",
+            "applicationStatus": "مؤهل للتقديم"
+        }
     ]
 }

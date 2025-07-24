@@ -7,24 +7,24 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		09775C1056C0DAE21B75FE8D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47833820B2FD207787F2EE5B /* ExpoModulesProvider.swift */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		453D750F1923FAFB5AF2C866 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 5C6BF9DFD5608FFDF41BCB1C /* PrivacyInfo.xcprivacy */; };
-		82723B84B67C4AF1A04D2D26 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45CB52275AA790A71980A20C /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		C2609BCE460A84E19B2A0D91 /* libPods-echoPay.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D7D9ED82992990853E5A4FC /* libPods-echoPay.a */; };
+		DA0912F0C5D8E378EE2F2C79 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 1D25763823D5D7E43C82A123 /* PrivacyInfo.xcprivacy */; };
+		E1FFDB8DE242207AB87C20E6 /* libPods-echoPay.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 41B52F646BCB830EE78159F8 /* libPods-echoPay.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0C89C38555DFA6FEB6A2EF3E /* Pods-echoPay.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-echoPay.release.xcconfig"; path = "Target Support Files/Pods-echoPay/Pods-echoPay.release.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* echoPay.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = echoPay.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = echoPay/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = echoPay/Info.plist; sourceTree = "<group>"; };
-		45CB52275AA790A71980A20C /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-echoPay/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		5C6BF9DFD5608FFDF41BCB1C /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = echoPay/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		8D7D9ED82992990853E5A4FC /* libPods-echoPay.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-echoPay.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		A16AE1AC2FD81499718D9651 /* Pods-echoPay.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-echoPay.debug.xcconfig"; path = "Target Support Files/Pods-echoPay/Pods-echoPay.debug.xcconfig"; sourceTree = "<group>"; };
+		1D25763823D5D7E43C82A123 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = echoPay/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		22C5CD292277EB08C4017E1E /* Pods-echoPay.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-echoPay.debug.xcconfig"; path = "Target Support Files/Pods-echoPay/Pods-echoPay.debug.xcconfig"; sourceTree = "<group>"; };
+		41B52F646BCB830EE78159F8 /* libPods-echoPay.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-echoPay.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		47833820B2FD207787F2EE5B /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-echoPay/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		943E49147912D3ADFFD06D58 /* Pods-echoPay.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-echoPay.release.xcconfig"; path = "Target Support Files/Pods-echoPay/Pods-echoPay.release.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = echoPay/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -37,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C2609BCE460A84E19B2A0D91 /* libPods-echoPay.a in Frameworks */,
+				E1FFDB8DE242207AB87C20E6 /* libPods-echoPay.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,7 +53,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				5C6BF9DFD5608FFDF41BCB1C /* PrivacyInfo.xcprivacy */,
+				1D25763823D5D7E43C82A123 /* PrivacyInfo.xcprivacy */,
 			);
 			name = echoPay;
 			sourceTree = "<group>";
@@ -62,19 +62,25 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				8D7D9ED82992990853E5A4FC /* libPods-echoPay.a */,
+				41B52F646BCB830EE78159F8 /* libPods-echoPay.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		59923EA9B31F79556D898164 /* Pods */ = {
+		3A581A8953B97329DA5775C5 /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				A16AE1AC2FD81499718D9651 /* Pods-echoPay.debug.xcconfig */,
-				0C89C38555DFA6FEB6A2EF3E /* Pods-echoPay.release.xcconfig */,
+				516A8822BD8AB3F8BE9D8B16 /* echoPay */,
 			);
-			name = Pods;
-			path = Pods;
+			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
+		516A8822BD8AB3F8BE9D8B16 /* echoPay */ = {
+			isa = PBXGroup;
+			children = (
+				47833820B2FD207787F2EE5B /* ExpoModulesProvider.swift */,
+			);
+			name = echoPay;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -91,8 +97,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				59923EA9B31F79556D898164 /* Pods */,
-				A6D3B9755AD92B42B6ECBCB7 /* ExpoModulesProviders */,
+				85A87F31CE1F27CC22D78063 /* Pods */,
+				3A581A8953B97329DA5775C5 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -107,20 +113,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		A6D3B9755AD92B42B6ECBCB7 /* ExpoModulesProviders */ = {
+		85A87F31CE1F27CC22D78063 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				B64F45252ABBEAE94932B5FF /* echoPay */,
+				22C5CD292277EB08C4017E1E /* Pods-echoPay.debug.xcconfig */,
+				943E49147912D3ADFFD06D58 /* Pods-echoPay.release.xcconfig */,
 			);
-			name = ExpoModulesProviders;
-			sourceTree = "<group>";
-		};
-		B64F45252ABBEAE94932B5FF /* echoPay */ = {
-			isa = PBXGroup;
-			children = (
-				45CB52275AA790A71980A20C /* ExpoModulesProvider.swift */,
-			);
-			name = echoPay;
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -140,13 +140,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "echoPay" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				6C893D51535E1CBC1BC776DC /* [Expo] Configure project */,
+				967CBE9A93039A1B3AD601DD /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				BA48F24EDD680961A4BD29A8 /* [CP] Embed Pods Frameworks */,
+				0DCF21DCEED1FEDF81622C79 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -196,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				453D750F1923FAFB5AF2C866 /* PrivacyInfo.xcprivacy in Resources */,
+				DA0912F0C5D8E378EE2F2C79 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -240,24 +240,23 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		6C893D51535E1CBC1BC776DC /* [Expo] Configure project */ = {
+		0DCF21DCEED1FEDF81622C79 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputFileListPaths = (
-			);
 			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-echoPay/Pods-echoPay-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
 			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
+			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-echoPay/expo-configure-project.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-echoPay/Pods-echoPay-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -278,6 +277,8 @@
 				"${PODS_CONFIGURATION_BUILD_DIR}/expo-dev-launcher/EXDevLauncher.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/expo-dev-menu/EXDevMenu.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/glog/glog_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/lottie-ios/LottiePrivacyInfo.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/lottie-react-native/Lottie_React_Native_Privacy.bundle",
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
@@ -293,29 +294,32 @@
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXDevLauncher.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXDevMenu.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/glog_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/LottiePrivacyInfo.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Lottie_React_Native_Privacy.bundle",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-echoPay/Pods-echoPay-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		BA48F24EDD680961A4BD29A8 /* [CP] Embed Pods Frameworks */ = {
+		967CBE9A93039A1B3AD601DD /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-echoPay/Pods-echoPay-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			inputFileListPaths = (
 			);
-			name = "[CP] Embed Pods Frameworks";
+			inputPaths = (
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-echoPay/Pods-echoPay-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-echoPay/expo-configure-project.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -325,7 +329,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				82723B84B67C4AF1A04D2D26 /* ExpoModulesProvider.swift in Sources */,
+				09775C1056C0DAE21B75FE8D /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -334,7 +338,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A16AE1AC2FD81499718D9651 /* Pods-echoPay.debug.xcconfig */;
+			baseConfigurationReference = 22C5CD292277EB08C4017E1E /* Pods-echoPay.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -370,7 +374,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0C89C38555DFA6FEB6A2EF3E /* Pods-echoPay.release.xcconfig */;
+			baseConfigurationReference = 943E49147912D3ADFFD06D58 /* Pods-echoPay.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
