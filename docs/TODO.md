@@ -1,0 +1,8 @@
+-   [x] Setup the project
+-   [x] Setup DATA
+-   [ ] Setup STT
+-   [ ] Setup LLM
+-   [ ] Setup TTS
+-   [ ] Setup UI
+-   [ ] TEST
+-   [ ] Setup Presntation
