@@ -1,18 +1,11 @@
+import { ChatMessage } from "../types/core"
+
 interface LLMResponse {
     type: "info" | "action" | "ignore"
     fillerAudio?: string
     response: string
     needsOTP?: boolean
     actionData?: any
-}
-
-interface BankingContext {
-    user: any
-    accounts: any
-    creditCards: any[]
-    transactions: any[]
-    bills: any[]
-    contacts: any[]
 }
 
 class LLMService {
@@ -31,25 +24,57 @@ class LLMService {
     }
 
     async processUserQuery(
-        userInput: string,
-        bankingContext: BankingContext,
+        history: ChatMessage[], // ⬅️ new
     ): Promise<LLMResponse> {
-        if (!this.apiKey) {
-            return {
-                type: "ignore",
-                response: "خدمة الذكاء الاصطناعي غير متاحة حالياً",
-            }
-        }
-
-        // LLM will handle echo keyword verification
-        const startTime = Date.now()
+        /* -------- Trim history if too long -------- */
+        const MAX_TOKENS = 3500 // keep a little headroom
+        const trimmed = this.trimHistory(history, MAX_TOKENS)
 
         try {
-            const prompt = this.buildPrompt(userInput, bankingContext)
-            console.log("🧠 Sending to OpenAI:", userInput)
+            const startTime = Date.now()
+
+            // Build the input for o4-mini format
+            const input = []
+
+            // Add system prompt as developer role
+            const systemMessage = trimmed.find((msg) => msg.role === "system")
+            if (systemMessage) {
+                input.push({
+                    role: "developer",
+                    content: [
+                        {
+                            type: "input_text",
+                            text: systemMessage.content,
+                        },
+                    ],
+                })
+            }
+
+            // Add conversation history as user inputs
+            const conversationHistory = trimmed.filter(
+                (msg) => msg.role !== "system",
+            )
+            if (conversationHistory.length > 0) {
+                const historyText = conversationHistory
+                    .map(
+                        (msg) =>
+                            `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`,
+                    )
+                    .join("\n\n")
+
+                input.push({
+                    role: "user",
+                    content: [
+                        {
+                            type: "input_text",
+                            text: historyText,
+                        },
+                    ],
+                })
+            }
 
             const response = await fetch(
-                "https://api.openai.com/v1/chat/completions",
+                "https://api.openai.com/v1/responses",
                 {
                     method: "POST",
                     headers: {
@@ -57,77 +82,131 @@ class LLMService {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        model: "gpt-4.1",
-                        messages: [
-                            {
-                                role: "system",
-                                content: prompt,
+                        model: "o4-mini",
+                        input: input,
+                        text: {
+                            format: {
+                                type: "text",
                             },
-                            {
-                                role: "user",
-                                content: userInput,
-                            },
-                        ],
+                        },
+                        reasoning: {
+                            effort: "low",
+                        },
+                        tools: [],
+                        store: true,
                     }),
                 },
             )
 
-            const apiTime = Date.now() - startTime
-            console.log(`⏱️ OpenAI API took: ${apiTime}ms`)
-
             if (!response.ok) {
                 const errorText = await response.text()
                 console.error(
-                    `❌ OpenAI API error ${response.status}:`,
+                    `❌ o4-mini API error ${response.status}:`,
                     errorText,
                 )
-                throw new Error(`OpenAI API error: ${response.status}`)
+                throw new Error(`o4-mini API error: ${response.status}`)
             }
 
             const data = await response.json()
-            console.log("🔍 Full API Response:", JSON.stringify(data, null, 2))
+            // Response received
 
-            const llmOutput = data.choices[0]?.message?.content
+            // o4-mini response structure - extract from nested output
+            let llmOutput = null
+
+            // Try to find the message output in the array
+            if (data.output && Array.isArray(data.output)) {
+                const messageOutput = data.output.find(
+                    (item: any) => item.type === "message",
+                )
+                if (messageOutput?.content?.[0]?.text) {
+                    llmOutput = messageOutput.content[0].text
+                    console.log(
+                        "✅ Found content in data.output[message].content[0].text",
+                    )
+                }
+            }
+
+            // Fallback attempts
+            if (!llmOutput && data.text && typeof data.text === "string") {
+                llmOutput = data.text
+                console.log("✅ Found content in data.text (fallback)")
+            } else if (!llmOutput && data.content) {
+                llmOutput = data.content
+                console.log("✅ Found content in data.content (fallback)")
+            } else if (!llmOutput && data.choices?.[0]?.message?.content) {
+                llmOutput = data.choices[0].message.content
+                console.log(
+                    "✅ Found content in data.choices[0].message.content (fallback)",
+                )
+            }
 
             if (!llmOutput) {
                 console.error(
-                    "❌ No content in response. Data structure:",
-                    data,
+                    "❌ No content found in o4-mini response. Available keys:",
+                    Object.keys(data),
                 )
-                throw new Error("No response from OpenAI")
+                throw new Error("No response content from o4-mini")
             }
 
-            console.log("🔍 Raw LLM Output:", llmOutput)
+            // Parse response
 
-            // Parse JSON response from LLM
+            // Parse JSON response from LLM with robust validation
             let parsedResponse: LLMResponse
             try {
-                parsedResponse = JSON.parse(llmOutput)
+                // Check if response looks like JSON
+                if (!llmOutput.trim().startsWith("{")) {
+                    console.warn(
+                        "⚠️ LLM returned non-JSON response, attempting to wrap...",
+                    )
+                    // Try to extract JSON if it's embedded
+                    const jsonMatch = llmOutput.match(/\{[\s\S]*\}/)
+                    if (jsonMatch) {
+                        parsedResponse = JSON.parse(jsonMatch[0])
+                        console.log("✅ Extracted JSON from mixed response")
+                    } else {
+                        // Create fallback JSON response
+                        console.warn("⚠️ Creating fallback JSON response")
+                        parsedResponse = {
+                            type: "info",
+                            fillerAudio: "processing_request",
+                            response: llmOutput.trim(),
+                            needsOTP: false,
+                            actionData: {},
+                        }
+                    }
+                } else {
+                    parsedResponse = JSON.parse(llmOutput)
+                }
+
+                // Validate required fields
+                if (!parsedResponse.type || !parsedResponse.response) {
+                    throw new Error("Missing required fields in LLM response")
+                }
             } catch (parseError) {
-                console.error(
-                    "❌ Failed to parse LLM JSON response:",
-                    parseError,
-                )
-                console.error(
-                    "❌ Raw response that failed to parse:",
-                    llmOutput,
-                )
-                throw new Error("Invalid JSON response from LLM")
+                console.error("❌ Failed to parse LLM response:", parseError)
+                console.error("❌ Raw response:", llmOutput)
+                console.error("❌ Error details:", parseError)
+
+                // Create emergency fallback response
+                parsedResponse = {
+                    type: "info",
+                    fillerAudio: "processing_request",
+                    response: llmOutput.includes("عندك")
+                        ? llmOutput.trim()
+                        : "عذراً، حدث خطأ في معالجة طلبك",
+                    needsOTP: false,
+                    actionData: {},
+                }
+                console.log("🛠️ Using emergency fallback response")
             }
 
-            const totalTime = Date.now() - startTime
-            console.log(`✅ LLM Complete - Total time: ${totalTime}ms`)
-            console.log("📋 LLM Response:", {
-                type: parsedResponse.type,
-                fillerAudio: parsedResponse.fillerAudio,
-                response: parsedResponse.response,
-                needsOTP: parsedResponse.needsOTP,
-            })
+            const endTime = Date.now()
+            const duration = endTime - startTime
+            console.log(`⚡ LLM took ${duration}ms`)
 
             return parsedResponse
         } catch (error) {
-            const totalTime = Date.now() - startTime
-            console.error(`❌ LLM Service error after ${totalTime}ms:`, error)
+            console.error("❌ LLM Service error")
             return {
                 type: "ignore",
                 response: "عذراً، حدث خطأ في معالجة طلبك",
@@ -135,50 +214,25 @@ class LLMService {
         }
     }
 
-    private buildPrompt(userInput: string, context: BankingContext): string {
-        return `You are "Echo", a smart Saudi banking assistant for a Bank. Respond in Saudi Arabic dialect, casual but professional.
-      
-      COMPLETE USER DATA:
-      User Info: ${JSON.stringify(context.user, null, 2)}
-      Accounts: ${JSON.stringify(context.accounts, null, 2)}
-      Credit Cards: ${JSON.stringify(context.creditCards, null, 2)}
-      Recent Transactions: ${JSON.stringify(context.transactions.slice(0, 10), null, 2)}
-      Bills: ${JSON.stringify(context.bills, null, 2)}
-      Contacts: ${JSON.stringify(context.contacts, null, 2)}
-      
-      RESPONSE RULES:
-      1. For info queries (balance, transactions, cards) use "type":"info".
-      2. For actions (transfers, bill payments) use "type":"action" and set "needsOTP":true.
-      3. Keep answers SHORT and CONCISE (≤ 2 sentences).
-      4. **Write all numbers fully in Arabic words, not digits**  
-         • Example: "مئة ريال" ✅ — not "100 ريال" ❌
-      5. Use the exact data provided; no assumptions. Mention names & amounts explicitly.
-      6. Remain casual yet professional in the Saudi dialect.
-      
-      FILLER AUDIO KEYS:
-      - "checking_balance"(balance queries)
-      - "checking_transactions" (transaction history)
-      - "processing_request"(general)
-      - "preparing_transfer"(transfers / payments)
-      
-      RESPONSE EXAMPLES (WITH WORDS, NOT DIGITS):
-      - Balance: "رصيدك الجاري خمسة آلاف ومئتان وستة وستون ريال، والتوفير اثنا عشر ألفًا وثمانمئة وخمسون ريال."
-      - Spending: "صرفت مئتين وستين ريال على المطاعم هالشهر في خمس معاملات."
-      - Bills: "عندك ثلاث فواتير مستحقة: الكهرباء مئتان وخمسة وثمانون ريال، المياه خمسة وتسعون ريال، زين مئة وخمسة وعشرون ريال."
-      
-      ALWAYS reply in this exact JSON schema:
-      {
-        "type": "info" | "action" | "ignore",
-        "fillerAudio": "audio_key",
-        "response": "short Arabic response",
-        "needsOTP": false,
-        "actionData": {}
-      }`
-    }
-
     static isConfigured(): boolean {
         const instance = LLMService.getInstance()
         return !!instance.apiKey
+    }
+
+    /* --- helper: drop oldest msgs once token budget exceeded --- */
+    private trimHistory(history: ChatMessage[], budget: number) {
+        let tokens = 0
+        const reversed: ChatMessage[] = []
+        for (let i = history.length - 1; i >= 0; i--) {
+            tokens += this.roughTokenCount(history[i].content)
+            if (tokens > budget) break
+            reversed.push(history[i])
+        }
+        return reversed.reverse()
+    }
+
+    private roughTokenCount(text: string) {
+        return Math.ceil(text.length / 4) // quick heuristic
     }
 }
 

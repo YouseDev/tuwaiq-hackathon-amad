@@ -48,13 +48,18 @@ class TTSService {
     /* ---------- Public: Speak ---------- */
     async speak(text: string) {
         try {
-            console.log("🗣️ TTS start:", text)
+            const startTime = Date.now()
+            console.log("🗣️ TTS start:", text.slice(0, 50) + "...")
             await this.stop()
 
             if (!this.audioConfigured) await this.configureAudioSession()
 
             const audioUri = await this.generateSpeech(text)
-            if (audioUri) await this.playAudio(audioUri)
+            if (audioUri) {
+                await this.playAudio(audioUri)
+                const endTime = Date.now()
+                console.log(`⚡ TTS took ${endTime - startTime}ms`)
+            }
         } catch (err) {
             console.error("❌ TTS error:", err)
         }

@@ -102,7 +102,7 @@ const useSTTService = () => {
 
     useSpeechRecognitionEvent("end", () => {
         setIsListening(false)
-        console.log("🔚 STT ended")
+        console.log("🔚 STT ended - confidence:", confidence)
         // Auto‑restart only if user is still holding / requesting
         if (continuous && wantListening.current) startEngine()
     })
@@ -110,6 +110,15 @@ const useSTTService = () => {
     useSpeechRecognitionEvent("result", (e) => {
         const text = e.results?.[0]?.transcript ?? ""
         const conf = e.results?.[0]?.confidence ?? 0
+
+        // Only log when confidence > 0 to reduce noise
+        if (conf > 0) {
+            console.log(
+                "🎙️ STT:",
+                text.slice(0, 30) + (text.length > 30 ? "..." : ""),
+            )
+        }
+
         setTranscript(text)
         setConfidence(conf)
     })

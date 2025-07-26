@@ -3,19 +3,19 @@
         "name": "أحمد عبدالله الراشد",
         "phone": "+966501234567",
         "nationalId": "1********89",
-        "preferredName": "أحمد",
+        "preferredName": "ابو عبد الله",
         "voicePasscode": "3211"
     },
     "accounts": {
         "checking": {
             "accountNumber": "SA44 2000 0001 2345 6789 1234",
-            "balance": 5262.5,
+            "balance": 5263,
             "currency": "SAR",
             "type": "جاري"
         },
         "savings": {
             "accountNumber": "SA44 2000 0001 2345 6789 5678",
-            "balance": 12850.75,
+            "balance": 12851,
             "currency": "SAR",
             "type": "توفير"
         }
@@ -324,7 +324,7 @@
             "id": "bill_001",
             "provider": "شركة الكهرباء السعودية",
             "type": "كهرباء",
-            "amount": 285.5,
+            "amount": 286,
             "dueDate": "2024-01-20",
             "status": "مستحقة",
             "accountNumber": "1234567890",
@@ -334,7 +334,7 @@
             "id": "bill_002",
             "provider": "شركة المياه الوطنية",
             "type": "مياه",
-            "amount": 95.0,
+            "amount": 95,
             "dueDate": "2024-01-25",
             "status": "مستحقة",
             "accountNumber": "WTR-456789",
@@ -344,7 +344,7 @@
             "id": "bill_003",
             "provider": "زين السعودية",
             "type": "جوال",
-            "amount": 125.0,
+            "amount": 125,
             "dueDate": "2024-01-18",
             "status": "مستحقة قريباً",
             "accountNumber": "966501234567",
@@ -354,7 +354,7 @@
             "id": "bill_004",
             "provider": "شبكة الاتصالات السعودية STC",
             "type": "إنترنت",
-            "amount": 199.0,
+            "amount": 199,
             "dueDate": "2024-01-30",
             "status": "غير مستحقة",
             "accountNumber": "STC-789012",

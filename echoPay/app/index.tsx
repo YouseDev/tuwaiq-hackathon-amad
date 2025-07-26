@@ -9,7 +9,7 @@ import {
 } from "react-native"
 import { Feather } from "@expo/vector-icons"
 import { createAudioPlayer } from "expo-audio"
-
+import { BankingContext, ChatMessage } from "./types/core"
 import BalanceSection from "./components/BalanceSection"
 import CreditCardSection from "./components/CreditCardSection"
 import BillsSection from "./components/BillsSection"
@@ -19,16 +19,7 @@ import LLMService from "./services/LLMService"
 import TTSService from "./services/TTSService" // ⬅️ NEW
 import bankingData from "../assets/data/banking_data.json"
 
-/* -------- Local filler clips -------- */
-const FILLER = [
-    require("../assets/audio/filler-1.mp3"),
-    require("../assets/audio/filler-2.mp3"),
-    require("../assets/audio/filler-3.mp3"),
-    require("../assets/audio/filler-4.mp3"),
-    require("../assets/audio/filler-5.mp3"),
-    require("../assets/audio/filler-6.mp3"),
-    require("../assets/audio/filler-7.mp3"),
-]
+import tools from "./helpers/tools"
 
 export default function App() {
     /* -------- Demo banking data -------- */
@@ -37,79 +28,186 @@ export default function App() {
     const [userBills] = useState(bankingData.bills)
     const [userTransactions] = useState(bankingData.transactions.january_2024)
 
-    /* -------- Command buffer -------- */
+    const historyRef = useRef<ChatMessage[]>([
+        {
+            role: "system",
+            content: tools.buildPrompt({
+                ...bankingData,
+                transactions: bankingData.transactions.january_2024,
+            } as unknown as BankingContext),
+        },
+    ])
+
+    /* -------- Command buffer for collecting all confident transcripts -------- */
     const [commandBuffer, setCommandBuffer] = useState<string[]>([])
+    const processedCommandRef = useRef<string>("")
 
     /* -------- STT -------- */
-    const { startListening, stopListening, isActive, transcript, isListening } =
-        useSTTService()
+    const {
+        startListening,
+        stopListening,
+        isActive,
+        transcript,
+        isListening,
+        confidence,
+    } = useSTTService()
 
     /* -------- UI / busy -------- */
     const [busy, setBusy] = useState(false)
-    const lastClip = useRef<number | null>(null)
     const micDisabled = busy
 
-    /* -------- Collect transcripts -------- */
+    /* -------- Collect ALL transcripts for speed -------- */
     useEffect(() => {
         const clean = transcript.trim()
-        if (clean && !busy) setCommandBuffer((prev) => [...prev, clean])
-    }, [transcript])
 
-    /* -------- Detect STT stop -------- */
+        // Add ALL transcripts (no confidence check for speed)
+        if (clean && !busy) {
+            // Skip if this transcript was already processed
+            if (clean === processedCommandRef.current) {
+                console.log(
+                    "⏭️ Skipping already processed:",
+                    clean.slice(0, 30) + "...",
+                )
+                return
+            }
+
+            setCommandBuffer((prev) => {
+                // Only add if different from last entry
+                if (prev.length === 0 || prev[prev.length - 1] !== clean) {
+                    console.log(
+                        "✅ Buffer:",
+                        clean.slice(0, 40) + (clean.length > 40 ? "..." : ""),
+                    )
+                    return [...prev, clean]
+                }
+                return prev
+            })
+        }
+    }, [transcript, busy])
+
+    /* -------- Detect STT stop and process buffer -------- */
     const prevListening = useRef(isListening)
     useEffect(() => {
-        if (prevListening.current && !isListening && commandBuffer.length) {
-            handleAfterSTTStop()
+        if (prevListening.current && !isListening && commandBuffer.length > 0) {
+            console.log(
+                "🎯 STT stopped - buffer:",
+                commandBuffer.length,
+                "commands",
+            )
+
+            // Smart deduplication: remove repeated sequences and substrings
+            const cleanBuffer = commandBuffer.filter((item, index) => {
+                // Keep if it's not a substring of any other item
+                return !commandBuffer.some(
+                    (other, otherIndex) =>
+                        otherIndex !== index &&
+                        other.includes(item) &&
+                        other.length > item.length,
+                )
+            })
+
+            console.log(
+                "🧹 Cleaned buffer:",
+                cleanBuffer.length,
+                "commands after deduplication",
+            )
+
+            // Use the longest (most complete) command from cleaned buffer
+            const finalCommand = cleanBuffer.reduce((longest, current) =>
+                current.length > longest.length ? current : longest,
+            )
+
+            console.log(
+                "🎯 Selected command:",
+                finalCommand.slice(0, 50) +
+                    (finalCommand.length > 50 ? "..." : ""),
+            )
+            handleAfterSTTStop(finalCommand)
         }
         prevListening.current = isListening
-    }, [isListening])
+    }, [isListening, commandBuffer])
 
     /* -------- Core flow -------- */
-    const handleAfterSTTStop = async () => {
+    const handleAfterSTTStop = async (finalCommand: string) => {
         setBusy(true)
 
-        /* 1️⃣ Play non‑repeating filler */
-        //playRandomFiller()
-
-        /* 2️⃣ Send buffer to LLM */
-        const query = commandBuffer.join(" ")
+        /* 1️⃣ Clear buffer and mark command as processed */
         setCommandBuffer([])
+        processedCommandRef.current = finalCommand
 
-        const llmCtx = {
-            user: {},
-            accounts: userAccount,
-            creditCards: userCards,
-            transactions: userTransactions,
-            bills: userBills,
-            contacts: [],
-        }
+        const query = finalCommand
 
-        let llmRes
+        /* Add user message to history */
+        historyRef.current.push({
+            role: "user",
+            content: query,
+        })
+
         try {
-            llmRes = await LLMService.processUserQuery(query, llmCtx)
-            console.log("🤖 LLM Response:", llmRes)
-        } catch (err) {
-            console.error("❌ LLM call failed:", err)
-        }
+            console.log(
+                "🚀 Processing query:",
+                query.slice(0, 50) + (query.length > 50 ? "..." : ""),
+            )
 
-        /* 3️⃣ Speak LLM response text */
-        if (llmRes?.response) {
+            const llmRes = await LLMService.processUserQuery(historyRef.current)
+
+            // Validate LLM response structure
+            if (!llmRes || typeof llmRes !== "object") {
+                throw new Error("Invalid LLM response structure")
+            }
+
+            if (!llmRes.response || typeof llmRes.response !== "string") {
+                throw new Error("Missing or invalid response text")
+            }
+
+            /* 2️⃣ Play selected filler audio */
+            if (llmRes.fillerAudio) {
+                playFillerAudio(llmRes.fillerAudio)
+            }
+
+            /* 3️⃣ Push assistant reply */
+            historyRef.current.push({
+                role: "assistant",
+                content: llmRes.response,
+            })
+
             await TTSService.speak(llmRes.response)
+        } catch (err) {
+            console.error("❌ Complete error details:")
+            console.error("❌ Error message:", (err as Error)?.message || err)
+            console.error("❌ Error stack:", (err as Error)?.stack)
+            console.error("❌ Query that caused error:", query)
+            console.error(
+                "❌ History at error:",
+                JSON.stringify(historyRef.current, null, 2),
+            )
+
+            // Fallback TTS
+            await TTSService.speak("عذراً، حدث خطأ في معالجة طلبك")
         }
 
-        setCommandBuffer([])
         setBusy(false)
+
+        // Clear processed command after 5 seconds to allow legitimate repeats
+        setTimeout(() => {
+            processedCommandRef.current = ""
+        }, 5000)
     }
 
     /* -------- Helpers -------- */
-    const playRandomFiller = () => {
-        let idx: number
-        do {
-            idx = Math.floor(Math.random() * FILLER.length)
-        } while (FILLER.length > 1 && idx === lastClip.current)
+    const playFillerAudio = (fillerKey: string) => {
+        const audioFiles =
+            tools.AUDIO_FILES[fillerKey as keyof typeof tools.AUDIO_FILES]
+        if (!audioFiles || audioFiles.length === 0) {
+            console.warn("⚠️ Unknown filler audio key:", fillerKey)
+            return
+        }
 
-        lastClip.current = idx
-        const player = createAudioPlayer(FILLER[idx])
+        // For now, use first audio file (can add randomization later)
+        const audioFile = audioFiles[0]
+        console.log("🎵 Playing filler audio:", fillerKey)
+
+        const player = createAudioPlayer(audioFile)
         player.volume = 1.0
         player.play()
         player.addListener("playbackStatusUpdate", (s) => {
