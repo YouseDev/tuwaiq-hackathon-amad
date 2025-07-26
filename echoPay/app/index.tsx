@@ -1,100 +1,175 @@
-import React, { useEffect, useState } from "react"
-import { ExpoSpeechRecognitionModule } from "expo-speech-recognition"
-import { Beiruti_400Regular, Beiruti_700Bold } from "@expo-google-fonts/beiruti"
-import { useFonts } from "expo-font"
-import LoginTopSection from "./components/LoginTopSection"
-import AppContainer from "./components/AppContainer"
-import AppTopContainer from "./components/AppTopContainer"
-import AppBottomContainer from "./components/AppBottomContainer"
-import LoginLoadingSection from "./components/LoginLoadingSection"
-import LoginReadySection from "./components/LoginReadySection"
-import BankContainer from "./components/BankContainer"
+import React, { useEffect, useRef, useState } from "react"
+import {
+    ScrollView,
+    View,
+    Text,
+    Image,
+    Pressable,
+    ActivityIndicator,
+} from "react-native"
+import { Feather } from "@expo/vector-icons"
+import { createAudioPlayer } from "expo-audio"
+
+import BalanceSection from "./components/BalanceSection"
+import CreditCardSection from "./components/CreditCardSection"
+import BillsSection from "./components/BillsSection"
+import TransactionSection from "./components/TransactionSection"
 import useSTTService from "./services/STTService"
+import LLMService from "./services/LLMService"
+import TTSService from "./services/TTSService" // ⬅️ NEW
+import bankingData from "../assets/data/banking_data.json"
+
+/* -------- Local filler clips -------- */
+const FILLER = [
+    require("../assets/audio/filler-1.mp3"),
+    require("../assets/audio/filler-2.mp3"),
+    require("../assets/audio/filler-3.mp3"),
+    require("../assets/audio/filler-4.mp3"),
+    require("../assets/audio/filler-5.mp3"),
+    require("../assets/audio/filler-6.mp3"),
+    require("../assets/audio/filler-7.mp3"),
+]
 
 export default function App() {
-    // ---------------- App Core State  ----------------
-    const [ready, setReady] = useState(false)
-    const [hasLoggedIn, setHasLoggedIn] = useState(false)
+    /* -------- Demo banking data -------- */
+    const [userAccount] = useState(bankingData.accounts)
+    const [userCards] = useState(bankingData.creditCards)
+    const [userBills] = useState(bankingData.bills)
+    const [userTransactions] = useState(bankingData.transactions.january_2024)
 
-    // Load fonts - Custom names for better organization
-    const [fontsLoaded] = useFonts({
-        AppFontRegular: Beiruti_400Regular,
-        AppFontBold: Beiruti_700Bold,
-    })
+    /* -------- Command buffer -------- */
+    const [commandBuffer, setCommandBuffer] = useState<string[]>([])
 
-    // ---------------- STT Service (App-level) ----------------
-    const stt = useSTTService()
+    /* -------- STT -------- */
+    const { startListening, stopListening, isActive, transcript, isListening } =
+        useSTTService()
 
-    // ---------------- Login Success Handler ----------------
-    const handleLoginSuccess = () => {
-        console.log("🎉 Login success callback received!")
-        setHasLoggedIn(true)
-    }
+    /* -------- UI / busy -------- */
+    const [busy, setBusy] = useState(false)
+    const lastClip = useRef<number | null>(null)
+    const micDisabled = busy
 
-    // ---------------- Initialization Logic ----------------
-    const initialize = async () => {
-        try {
-            await requestMicrophonePermissions()
-
-            // Fake loading for 2 seconds (better UX - not too fast)
-            console.log("⏳ Starting 2 second loading delay...")
-            await new Promise((resolve) => setTimeout(resolve, 2000))
-
-            setReady(true)
-            console.log("✅ EchoPay initialized successfully")
-            
-            // Start STT service after initialization
-            console.log("🎤 Starting STT service at app level...")
-        } catch (err) {
-            console.error("❌ Initialization failed:", err)
-        }
-    }
-
-    const requestMicrophonePermissions = async () => {
-        try {
-            console.log("🎤 Requesting microphone permissions...")
-            const { granted } =
-                await ExpoSpeechRecognitionModule.requestPermissionsAsync()
-
-            if (granted) {
-                console.log("✅ Microphone permission granted")
-            } else {
-                console.log(
-                    "❌ Microphone permission denied - STT features may not work",
-                )
-                // Don't throw error - let user try manually in STT service
-            }
-        } catch (permError) {
-            console.error("❌ Permission request failed:", permError)
-            // Don't block initialization - user can grant later in STT service
-        }
-    }
-
+    /* -------- Collect transcripts -------- */
     useEffect(() => {
-        initialize()
-    }, [])
+        const clean = transcript.trim()
+        if (clean && !busy) setCommandBuffer((prev) => [...prev, clean])
+    }, [transcript])
 
-    // ---------------- Main App ----------------
+    /* -------- Detect STT stop -------- */
+    const prevListening = useRef(isListening)
+    useEffect(() => {
+        if (prevListening.current && !isListening && commandBuffer.length) {
+            handleAfterSTTStop()
+        }
+        prevListening.current = isListening
+    }, [isListening])
+
+    /* -------- Core flow -------- */
+    const handleAfterSTTStop = async () => {
+        setBusy(true)
+
+        /* 1️⃣ Play non‑repeating filler */
+        //playRandomFiller()
+
+        /* 2️⃣ Send buffer to LLM */
+        const query = commandBuffer.join(" ")
+        setCommandBuffer([])
+
+        const llmCtx = {
+            user: {},
+            accounts: userAccount,
+            creditCards: userCards,
+            transactions: userTransactions,
+            bills: userBills,
+            contacts: [],
+        }
+
+        let llmRes
+        try {
+            llmRes = await LLMService.processUserQuery(query, llmCtx)
+            console.log("🤖 LLM Response:", llmRes)
+        } catch (err) {
+            console.error("❌ LLM call failed:", err)
+        }
+
+        /* 3️⃣ Speak LLM response text */
+        if (llmRes?.response) {
+            await TTSService.speak(llmRes.response)
+        }
+
+        setCommandBuffer([])
+        setBusy(false)
+    }
+
+    /* -------- Helpers -------- */
+    const playRandomFiller = () => {
+        let idx: number
+        do {
+            idx = Math.floor(Math.random() * FILLER.length)
+        } while (FILLER.length > 1 && idx === lastClip.current)
+
+        lastClip.current = idx
+        const player = createAudioPlayer(FILLER[idx])
+        player.volume = 1.0
+        player.play()
+        player.addListener("playbackStatusUpdate", (s) => {
+            if (s.isLoaded && s.didJustFinish) player.remove()
+        })
+    }
+
+    /* -------- UI -------- */
     return (
-        <AppContainer>
-            <AppTopContainer hasLoggedIn={hasLoggedIn}>
-                <LoginTopSection fontsLoaded={fontsLoaded} />
-            </AppTopContainer>
+        <View className="flex-1 bg-gray-900 pt-24">
+            <ScrollView
+                className="flex-1 w-full px-0 py-6"
+                contentContainerStyle={{ paddingBottom: 160 }}
+            >
+                {/* Header */}
+                <View className="w-full items-center px-6 mb-12 space-x-4 space-x-reverse">
+                    <View className="w-16 h-16 rounded-full overflow-hidden bg-gray-700">
+                        <Image
+                            source={require("../assets/images/avatar.avif")}
+                            className="w-full h-full"
+                            resizeMode="cover"
+                        />
+                    </View>
+                    <Text className="text-white text-4xl pt-4 text-right flex-1">
+                        مساء الخير ، أحمد
+                    </Text>
+                </View>
 
-            {/* Bottom Section - 60% with Curved Top and Dark Background */}
-            <AppBottomContainer hasLoggedIn={hasLoggedIn}>
-                {!ready ? (
-                    <LoginLoadingSection fontsLoaded={fontsLoaded} />
-                ) : hasLoggedIn ? (
-                    <BankContainer fontsLoaded={fontsLoaded} stt={stt} />
+                {/* Sections */}
+                <BalanceSection userAccount={userAccount} />
+                <CreditCardSection userCards={userCards} />
+                <BillsSection userBills={userBills} />
+                <TransactionSection userTransactions={userTransactions} />
+            </ScrollView>
+
+            {/* Mic button */}
+            <Pressable
+                onLongPress={micDisabled ? undefined : startListening}
+                delayLongPress={300}
+                onPressOut={micDisabled ? undefined : stopListening}
+                disabled={micDisabled}
+                className="
+          rounded-full w-20 h-20
+          items-center justify-center
+          shadow-lg bg-emerald-600
+        "
+                style={{
+                    position: "absolute",
+                    bottom: 40,
+                    alignSelf: "center",
+                    opacity: micDisabled ? 0.4 : 1,
+                    transform: [{ scale: isActive ? 1.1 : 1 }],
+                }}
+            >
+                {isActive ? (
+                    <ActivityIndicator size="large" color="#fff" />
                 ) : (
-                    <LoginReadySection
-                        fontsLoaded={fontsLoaded}
-                        onLoginSuccess={handleLoginSuccess}
-                        stt={stt}
-                    />
+                    <Feather name="mic" size={32} color="#fff" />
                 )}
-            </AppBottomContainer>
-        </AppContainer>
+            </Pressable>
+        </View>
     )
 }

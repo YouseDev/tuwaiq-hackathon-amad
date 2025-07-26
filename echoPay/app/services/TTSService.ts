@@ -1,14 +1,12 @@
-import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from "expo-audio"
-import { PRERECORDED_AUDIO, PrerecordedAudioKey } from "../config/audioConfig"
+import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from "expo-audio"
 import * as FileSystem from "expo-file-system"
 
-/* ---------- TTS Configuration ---------- */
-
+/* ---------- ElevenLabs TTS Config ---------- */
 const TTS_CONFIG = {
-    apiKey: process.env.EXPO_PUBLIC_ELEVENLABS_API_KEY,
-    voiceId: process.env.EXPO_PUBLIC_ELEVENLABS_VOICE_ID,
+    apiKey: process.env.EXPO_PUBLIC_ELEVENLABS_API_KEY!,
+    voiceId: process.env.EXPO_PUBLIC_ELEVENLABS_VOICE_ID!,
     apiUrl:
-        process.env.EXPO_PUBLIC_ELEVENLABS_API_URL ||
+        process.env.EXPO_PUBLIC_ELEVENLABS_API_URL ??
         "https://api.elevenlabs.io/v1/text-to-speech",
     voiceSettings: {
         stability: 1.0,
@@ -19,257 +17,172 @@ const TTS_CONFIG = {
 }
 
 class TTSService {
-    /* ---------- Static Instance ---------- */
+    /* ---------- Singleton ---------- */
     private static instance: TTSService
+    static getInstance() {
+        if (!TTSService.instance) TTSService.instance = new TTSService()
+        return TTSService.instance
+    }
 
-    /* ---------- Private State ---------- */
     private currentPlayer: AudioPlayer | null = null
     private isPlaying = false
     private audioConfigured = false
 
-    static getInstance(): TTSService {
-        if (!TTSService.instance) {
-            TTSService.instance = new TTSService()
-        }
-        return TTSService.instance
-    }
-
-    constructor() {
+    private constructor() {
         this.configureAudioSession()
     }
 
-    /* ---------- Audio Session Configuration ---------- */
-
-    private async configureAudioSession(): Promise<void> {
+    /* ---------- Audio Session ---------- */
+    private async configureAudioSession() {
         try {
             await setAudioModeAsync({
                 allowsRecording: false,
                 playsInSilentMode: true,
             })
             this.audioConfigured = true
-        } catch (error) {
-            console.error("❌ Audio session configuration failed:", error)
+        } catch (err) {
+            console.error("❌ Audio session config failed:", err)
         }
     }
 
-    /* ---------- Public Speech Methods ---------- */
-
-    async speak(text: string, isPrerecorded: boolean = false): Promise<void> {
+    /* ---------- Public: Speak ---------- */
+    async speak(text: string) {
         try {
-            console.log(
-                `🎤 TTS ${isPrerecorded ? "Pre-recorded" : "AI"} - Starting:`,
-                text,
-            )
-
-            // Stop any current audio
+            console.log("🗣️ TTS start:", text)
             await this.stop()
 
-            // Ensure audio session is configured
-            if (!this.audioConfigured) {
-                await this.configureAudioSession()
-            }
+            if (!this.audioConfigured) await this.configureAudioSession()
 
-            if (isPrerecorded) {
-                await this.playAudio(text as PrerecordedAudioKey, true)
-            } else {
-                const audioUri = await this.generateSpeech(text)
-                if (audioUri) {
-                    await this.playAudio(audioUri, false)
-                }
-            }
-        } catch (error) {
-            console.error("❌ TTS Error:", error)
+            const audioUri = await this.generateSpeech(text)
+            if (audioUri) await this.playAudio(audioUri)
+        } catch (err) {
+            console.error("❌ TTS error:", err)
         }
     }
 
-    async stop(): Promise<void> {
-        if (this.currentPlayer) {
-            try {
-                await this.currentPlayer.pause()
-                this.currentPlayer.remove()
-                this.currentPlayer = null
-                this.isPlaying = false
-                console.log("⏹️ Audio stopped")
-            } catch (error) {
-                console.error("❌ Stop audio error:", error)
-            }
-        }
-    }
-
-    /* ---------- Private Audio Methods ---------- */
-
-    private async playAudio(
-        source: string | PrerecordedAudioKey,
-        isPrerecorded: boolean,
-    ): Promise<void> {
+    /* ---------- Public: Stop ---------- */
+    async stop() {
+        if (!this.currentPlayer) return
         try {
-            let audioSource: any
+            await this.currentPlayer.pause()
+            this.currentPlayer.remove()
+        } catch (err) {
+            console.error("❌ Stop error:", err)
+        } finally {
+            this.currentPlayer = null
+            this.isPlaying = false
+        }
+    }
 
-            if (isPrerecorded) {
-                const audioConfig =
-                    PRERECORDED_AUDIO[source as PrerecordedAudioKey]
-                if (!audioConfig) {
-                    console.error("❌ Audio not found for key:", source)
-                    return
-                }
-                audioSource = audioConfig.audioFile
-            } else {
-                audioSource = source as string
-            }
-
-            // Create audio player
-            this.currentPlayer = createAudioPlayer(audioSource)
+    /* ---------- Playback ---------- */
+    private async playAudio(uri: string) {
+        try {
+            this.currentPlayer = createAudioPlayer(uri)
+            this.currentPlayer.volume = 1.0
             this.isPlaying = true
 
-            // Configure player settings
-            this.currentPlayer.volume = 1.0
-            this.currentPlayer.shouldCorrectPitch = false
-
-            // Minimal event listener - only for completion
-            this.currentPlayer.addListener("playbackStatusUpdate", (status) => {
-                if (status.isLoaded && status.didJustFinish) {
-                    this.handlePlaybackFinished(source as string, isPrerecorded)
-                }
+            this.currentPlayer.addListener("playbackStatusUpdate", (s) => {
+                if (s.isLoaded && s.didJustFinish) this.onPlaybackFinished(uri)
             })
 
-            // Start playback
             await this.currentPlayer.play()
-            console.log(`▶️ Audio started`)
-        } catch (error) {
-            console.error("❌ Audio playback error:", error)
+            console.log("▶️ Audio playing")
+        } catch (err) {
+            console.error("❌ Playback error:", err)
             this.isPlaying = false
             this.currentPlayer = null
         }
     }
 
-    private async handlePlaybackFinished(
-        source: string,
-        isPrerecorded: boolean,
-    ): Promise<void> {
-        console.log("✅ Audio finished")
+    private async onPlaybackFinished(uri: string) {
+        console.log("✅ Playback finished")
         this.isPlaying = false
+        this.currentPlayer?.remove()
+        this.currentPlayer = null
 
-        // Remove the player
-        if (this.currentPlayer) {
-            try {
-                this.currentPlayer.remove()
-            } catch (error) {
-                console.error("❌ Error removing player:", error)
-            }
-            this.currentPlayer = null
-        }
-
-        // Clean up generated audio files
-        if (!isPrerecorded && source.startsWith("file://")) {
-            this.cleanupGeneratedFile(source)
-        }
+        if (uri.startsWith("file://")) this.cleanupFile(uri)
     }
 
-    private async cleanupGeneratedFile(uri: string): Promise<void> {
+    private async cleanupFile(uri: string) {
         try {
             await FileSystem.deleteAsync(uri, { idempotent: true })
-        } catch (error) {
-            console.error("❌ Error cleaning up generated file:", error)
+        } catch (err) {
+            console.error("❌ Cleanup error:", err)
         }
     }
 
-    /* ---------- Speech Generation ---------- */
-
+    /* ---------- ElevenLabs Request ---------- */
     private async generateSpeech(text: string): Promise<string | null> {
-        // Validate configuration
         if (!TTS_CONFIG.apiKey || !TTS_CONFIG.voiceId) {
-            console.error("❌ Missing ElevenLabs configuration")
+            console.error("❌ Missing ElevenLabs API key or voice ID")
             return null
         }
 
-        const requestUrl = `${TTS_CONFIG.apiUrl}/${TTS_CONFIG.voiceId}?output_format=mp3_44100_128`
-        const requestBody = {
+        const url = `${TTS_CONFIG.apiUrl}/${TTS_CONFIG.voiceId}?output_format=mp3_44100_128`
+        const body = {
             text,
             model_id: "eleven_multilingual_v2",
             voice_settings: TTS_CONFIG.voiceSettings,
         }
 
         try {
-            const response = await fetch(requestUrl, {
+            const res = await fetch(url, {
                 method: "POST",
                 headers: {
                     "xi-api-key": TTS_CONFIG.apiKey,
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(requestBody),
+                body: JSON.stringify(body),
             })
 
-            if (!response.ok) {
-                const errorText = await response.text()
+            if (!res.ok) {
                 console.error(
-                    "❌ ElevenLabs API Error:",
-                    response.status,
-                    errorText,
+                    "❌ ElevenLabs error:",
+                    res.status,
+                    await res.text(),
                 )
                 return null
             }
 
-            // Process audio response
-            const audioArrayBuffer = await response.arrayBuffer()
-            const uint8Array = new Uint8Array(audioArrayBuffer)
-
-            // Convert to base64 without stack overflow (handle large arrays)
-            let binaryString = ""
-            for (let i = 0; i < uint8Array.length; i++) {
-                binaryString += String.fromCharCode(uint8Array[i])
+            /* ---- convert ArrayBuffer → base64 (without Buffer) ---- */
+            const arrayBuf = await res.arrayBuffer()
+            const uint8Arr = new Uint8Array(arrayBuf)
+            let binary = ""
+            for (let i = 0; i < uint8Arr.length; i++) {
+                binary += String.fromCharCode(uint8Arr[i])
             }
-            const base64 = btoa(binaryString)
+            const base64 = btoa(binary)
 
-            // Save to temporary file
-            const timestamp = Date.now()
-            const tempUri = `${FileSystem.cacheDirectory}tts_${timestamp}.mp3`
-
-            await FileSystem.writeAsStringAsync(tempUri, base64, {
+            /* ---- write to a temp .mp3 ---- */
+            const uri = `${FileSystem.cacheDirectory}tts_${Date.now()}.mp3`
+            await FileSystem.writeAsStringAsync(uri, base64, {
                 encoding: FileSystem.EncodingType.Base64,
             })
 
-            console.log("✅ AI audio generated")
-            return tempUri
-        } catch (error) {
-            console.error("❌ Speech generation failed:", error)
+            console.log("✅ TTS generated")
+            return uri
+        } catch (err) {
+            console.error("❌ Generate speech failed:", err)
             return null
         }
     }
 
-    /* ---------- Public State Methods ---------- */
-
-    getIsPlaying(): boolean {
+    /* ---------- Getters ---------- */
+    getIsPlaying() {
         return this.isPlaying
     }
 
-    /* ---------- Configuration Helpers ---------- */
-
-    static isConfigured(): boolean {
+    static isConfigured() {
         return !!(TTS_CONFIG.apiKey && TTS_CONFIG.voiceId)
     }
 
-    static getConfigStatus(): string {
+    static getConfigStatus() {
         if (!TTS_CONFIG.apiKey) return "Missing API key"
         if (!TTS_CONFIG.voiceId) return "Missing voice ID"
         return "Configured"
     }
-
-    getAudioSessionStatus(): {
-        configured: boolean
-        mode: string
-        config: typeof TTS_CONFIG
-    } {
-        return {
-            configured: this.audioConfigured,
-            mode: this.audioConfigured
-                ? "High Quality (expo-audio)"
-                : "Default",
-            config: TTS_CONFIG,
-        }
-    }
 }
 
-/* ---------- Exports ---------- */
-
+/* ---------- Export Singleton ---------- */
 export const TTSServiceClass = TTSService
 export default TTSService.getInstance()

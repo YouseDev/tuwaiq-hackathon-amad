@@ -1,29 +1,23 @@
 import React from "react"
 import { View, Text } from "react-native"
 
-const BillsSection = ({
-    userBills,
-    fontsLoaded,
-}: {
-    userBills: any[]
-    fontsLoaded: boolean
-}) => (
-    <View className="bg-gray-800 rounded-2xl p-6 mb-6">
+const BillsSection = ({ userBills }: { userBills: any[] }) => (
+    <View className=" rounded-2xl mb-12">
         <Text
-            className="text-white text-2xl mb-6"
+            className="text-white text-3xl w-full text-right mb-6"
             style={{
-                fontFamily: fontsLoaded ? "AppFontBold" : "System",
+                fontFamily: "AppFontBold",
             }}
         >
-            الفواتير المستحقة
+            الفواتير
         </Text>
         {userBills.map((bill) => (
-            <View key={bill.id} className="bg-gray-700 rounded-xl p-5 mb-4">
+            <View key={bill.id} className="bg-gray-800 rounded-xl p-5 mb-4">
                 <View className="flex-row justify-between items-center mb-4">
                     <Text
                         className="text-white text-lg flex-1"
                         style={{
-                            fontFamily: fontsLoaded ? "AppFontBold" : "System",
+                            fontFamily: "AppFontBold",
                         }}
                     >
                         {bill.provider}
@@ -32,9 +26,7 @@ const BillsSection = ({
                         <Text
                             className="text-red-400 text-xl"
                             style={{
-                                fontFamily: fontsLoaded
-                                    ? "AppFontBold"
-                                    : "System",
+                                fontFamily: "AppFontBold",
                             }}
                         >
                             {bill.amount.toLocaleString()}{" "}

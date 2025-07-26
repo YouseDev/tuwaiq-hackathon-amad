@@ -3,19 +3,17 @@ import { View, Text } from "react-native"
 
 const TransactionSection = ({
     userTransactions,
-    fontsLoaded,
 }: {
     userTransactions: any[]
-    fontsLoaded: boolean
 }) => (
-    <View className="rounded-2xl p-0 mb-6">
+    <View className="rounded-2xl p-0 mb-12">
         <Text
-            className="text-white text-2xl mb-6 w-full text-right"
+            className="text-white text-3xl pr-2 mb-6 w-full text-right"
             style={{
-                fontFamily: fontsLoaded ? "AppFontBold" : "System",
+                fontFamily: "AppFontBold",
             }}
         >
-            المعاملات الأخيرة
+            العمليات
         </Text>
         {userTransactions.slice(0, 6).map((transaction, index) => (
             <View key={index} className="bg-gray-800 rounded-xl p-5 mb-3">
@@ -23,7 +21,7 @@ const TransactionSection = ({
                     <Text
                         className="text-white text-lg flex-1 mr-4"
                         style={{
-                            fontFamily: fontsLoaded ? "AppFontBold" : "System",
+                            fontFamily: "AppFontBold",
                         }}
                     >
                         {transaction.merchant}
@@ -35,7 +33,7 @@ const TransactionSection = ({
                                 : "text-red-400"
                         }`}
                         style={{
-                            fontFamily: fontsLoaded ? "AppFontBold" : "System",
+                            fontFamily: "AppFontBold",
                         }}
                     >
                         {transaction.amount > 0 ? "+" : ""}
