@@ -10,10 +10,10 @@ const AUDIO_KEYS = {
 
 // Audio file mapping (separate from LLM)
 const AUDIO_FILES = {
-    balance_check: [require("../../assets/audio/filler-1.mp3")],
-    transaction_search: [require("../../assets/audio/filler-2.mp3")],
-    general_request: [require("../../assets/audio/filler-3.mp3")],
-    transfer_payment: [require("../../assets/audio/filler-4.mp3")],
+    balance_check: [require("../assets/audio/filler-1.mp3")],
+    transaction_search: [require("../assets/audio/filler-2.mp3")],
+    general_request: [require("../assets/audio/filler-3.mp3")],
+    transfer_payment: [require("../assets/audio/filler-4.mp3")],
 }
 
 const buildPrompt = (context: BankingContext) => {

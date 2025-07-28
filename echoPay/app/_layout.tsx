@@ -14,10 +14,22 @@ export default function RootLayout() {
         AppFontBold: Beiruti_700Bold,
     })
 
+    if (!fontsLoaded) {
+        return null
+    }
+
     return (
         <>
-            <Stack>
-                <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen 
+                    name="assistant" 
+                    options={{ 
+                        headerShown: false,
+                        presentation: 'fullScreenModal',
+                        animation: 'slide_from_bottom'
+                    }} 
+                />
             </Stack>
             <StatusBar style="dark" />
         </>

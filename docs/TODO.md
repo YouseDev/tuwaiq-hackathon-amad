@@ -1,8 +1,11 @@
 -   [x] Setup the project
 -   [x] Setup DATA
--   [ ] Setup STT
--   [ ] Setup LLM
+-   [x] Setup STT
+-   [x] Setup LLM
 -   [x] Setup TTS
--   [ ] Setup UI
--   [ ] TEST
--   [ ] Setup Presntation
+-   [x] Setup UI
+-   [x] TEST
+-   [ ] Improve UI
+-   [ ] Implement paying the bills
+-   [ ] Implement transfering funds
+-   [ ] Implement bank/ads questions
