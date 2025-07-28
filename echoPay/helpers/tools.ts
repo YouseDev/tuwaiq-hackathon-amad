@@ -27,11 +27,6 @@ const buildPrompt = (context: BankingContext) => {
   Bills: ${JSON.stringify(context.bills, null, 2)}
   Contacts: ${JSON.stringify(context.contacts, null, 2)}
   
-  AVAILABLE FILLER AUDIO:
-  ${Object.entries(AUDIO_KEYS)
-      .map(([key, description]) => `- "${key}": ${description}`)
-      .join("\n  ")}
-  
   RESPONSE RULES:
   1. For info queries (balance, transactions, cards) use "type":"info".
   2. For actions (transfers, bill payments) use "type":"action" and set "needsOTP":true.
@@ -42,7 +37,6 @@ const buildPrompt = (context: BankingContext) => {
      • NEVER: "25 ريال" ❌ - Must be "خمسة وعشرون ريال" ✅
   5. Use the exact data provided; no assumptions. Mention names & amounts explicitly.
   6. Remain casual yet professional in the Saudi dialect.
-  7. **Select appropriate filler audio from the list above based on query type**
   
   RESPONSE EXAMPLES (ALL NUMBERS IN WORDS):
   - Balance: "رصيدك الجاري خمسة آلاف ومئتان واثنان وستون ريال، والتوفير اثنا عشر ألفًا وثمانمئة وخمسون ريال."
@@ -52,7 +46,6 @@ const buildPrompt = (context: BankingContext) => {
   CRITICAL: You MUST ALWAYS reply with ONLY valid JSON in this exact schema. Do NOT include any text before or after the JSON:
   {
     "type": "info" | "action" | "ignore",
-    "fillerAudio": "audio_key",
     "response": "short Arabic response",
     "needsOTP": false,
     "actionData": {}
@@ -64,4 +57,5 @@ const buildPrompt = (context: BankingContext) => {
 export default {
     buildPrompt,
     AUDIO_FILES,
+    AUDIO_KEYS,
 }

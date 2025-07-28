@@ -23,6 +23,7 @@ import ReanimatedAnimated, {
 } from "react-native-reanimated"
 import useSTTService from "../services/STTService"
 import LLMService from "../services/LLMService"
+import FastLLMService from "../services/FastLLMService"
 import TTSService from "../services/TTSService"
 import bankingData from "../assets/data/banking_data.json"
 import tools from "../helpers/tools"
@@ -39,6 +40,7 @@ export default function VoiceAssistantScreen() {
     const [voiceState, setVoiceState] = useState<VoiceState>("idle")
     const [aiResponse, setAiResponse] = useState("")
     const [userQuery, setUserQuery] = useState("")
+    const [processingMessage, setProcessingMessage] = useState("جاري التفكير...")
     
     // Animation values (old API for some animations)
     const fadeAnim = useRef(new Animated.Value(0)).current
@@ -151,13 +153,13 @@ export default function VoiceAssistantScreen() {
         }
     }, [voiceState])
 
-    // Wave animation for listening state
+    // Wave animation for listening and processing states
     useEffect(() => {
-        if (voiceState === "listening") {
+        if (voiceState === "listening" || voiceState === "processing") {
             const waveAnimation = Animated.loop(
                 Animated.timing(waveAnim, {
                     toValue: 1,
-                    duration: 1000,
+                    duration: voiceState === "listening" ? 1000 : 800,
                     useNativeDriver: true,
                 })
             )
@@ -222,21 +224,49 @@ export default function VoiceAssistantScreen() {
         })
 
         try {
-            const llmRes = await LLMService.processUserQuery(historyRef.current)
+            console.log("🚀 Starting parallel LLM execution")
+            const startTime = Date.now()
+            
+            // Start both LLMs in parallel
+            const fastLLMPromise = FastLLMService.selectFillerAudio(command)
+            const smartLLMPromise = LLMService.processUserQuery(historyRef.current)
 
-            if (llmRes.fillerAudio) {
-                playFillerAudio(llmRes.fillerAudio)
+            // Wait for fast LLM first (should be much faster)
+            const fastResult = await fastLLMPromise
+            const fastDuration = Date.now() - startTime
+            console.log(`⚡ FastLLM completed in ${fastDuration}ms`)
+            
+            // Update processing message immediately
+            if (fastResult.waitingMessage) {
+                setProcessingMessage(fastResult.waitingMessage)
             }
+            
+            // Play filler audio immediately
+            if (fastResult.fillerAudio) {
+                playFillerAudio(fastResult.fillerAudio)
+                console.log(`🎵 Playing filler audio: ${fastResult.fillerAudio}`)
+            }
+
+            // Wait for smart LLM (should complete while filler is playing)
+            const smartResult = await smartLLMPromise
+            const totalDuration = Date.now() - startTime
+            console.log(`🧠 SmartLLM completed in ${totalDuration}ms total`)
 
             historyRef.current.push({
                 role: "assistant",
-                content: llmRes.response,
+                content: smartResult.response,
             })
 
-            setAiResponse(llmRes.response)
+            // Start TTS first, then show response
             setVoiceState("speaking")
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-            await TTSService.speak(llmRes.response)
+            
+            // Small delay to let TTS start before showing text
+            setTimeout(() => {
+                setAiResponse(smartResult.response)
+            }, 300)
+            
+            await TTSService.speak(smartResult.response)
             
             // Keep the answer visible - don't return to idle automatically
             // User can press button again for new question
@@ -279,6 +309,9 @@ export default function VoiceAssistantScreen() {
                 setAiResponse("")
                 setUserQuery("")
             }
+            
+            // Reset processing message
+            setProcessingMessage("جاري التفكير...")
             
             // Change to listening state
             setVoiceState("listening")
@@ -560,15 +593,42 @@ export default function VoiceAssistantScreen() {
 
     const renderProcessingState = () => (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            {/* Animated Processing Dots */}
+            <View style={{ alignItems: 'center', marginBottom: 30 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    {[1, 2, 3].map((index) => (
+                        <Animated.View
+                            key={index}
+                            style={{
+                                width: 12,
+                                height: 12,
+                                backgroundColor: '#3B82F6',
+                                borderRadius: 6,
+                                transform: [{
+                                    scale: waveAnim.interpolate({
+                                        inputRange: [0, 1],
+                                        outputRange: [0.8, 1.2],
+                                    })
+                                }],
+                                opacity: waveAnim.interpolate({
+                                    inputRange: [0, 0.5, 1],
+                                    outputRange: [0.5, 1, 0.5],
+                                })
+                            }}
+                        />
+                    ))}
+                </View>
+            </View>
+            
             <Text
                 style={{
-                    fontSize: 36,
+                    fontSize: 32,
                     color: '#1F2937',
                     fontFamily: 'AppFontBold',
                     textAlign: 'center',
                 }}
             >
-                جاري التفكير...
+                {processingMessage}
             </Text>
         </View>
     )

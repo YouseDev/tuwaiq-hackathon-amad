@@ -1,22 +1,21 @@
 import { ChatMessage } from "../types/core"
 
-interface LLMResponse {
+interface SmartLLMResponse {
     type: "info" | "action" | "ignore"
-    fillerAudio?: string
     response: string
     needsOTP?: boolean
     actionData?: any
 }
 
-class LLMService {
-    private static instance: LLMService
+class SmartLLMService {
+    private static instance: SmartLLMService
     private apiKey: string
 
-    static getInstance(): LLMService {
-        if (!LLMService.instance) {
-            LLMService.instance = new LLMService()
+    static getInstance(): SmartLLMService {
+        if (!SmartLLMService.instance) {
+            SmartLLMService.instance = new SmartLLMService()
         }
-        return LLMService.instance
+        return SmartLLMService.instance
     }
 
     constructor() {
@@ -25,7 +24,7 @@ class LLMService {
 
     async processUserQuery(
         history: ChatMessage[], // ⬅️ new
-    ): Promise<LLMResponse> {
+    ): Promise<SmartLLMResponse> {
         /* -------- Trim history if too long -------- */
         const MAX_TOKENS = 3500 // keep a little headroom
         const trimmed = this.trimHistory(history, MAX_TOKENS)
@@ -151,12 +150,12 @@ class LLMService {
             // Parse response
 
             // Parse JSON response from LLM with robust validation
-            let parsedResponse: LLMResponse
+            let parsedResponse: SmartLLMResponse
             try {
                 // Check if response looks like JSON
                 if (!llmOutput.trim().startsWith("{")) {
                     console.warn(
-                        "⚠️ LLM returned non-JSON response, attempting to wrap...",
+                        "⚠️ SmartLLM returned non-JSON response, attempting to wrap...",
                     )
                     // Try to extract JSON if it's embedded
                     const jsonMatch = llmOutput.match(/\{[\s\S]*\}/)
@@ -168,7 +167,6 @@ class LLMService {
                         console.warn("⚠️ Creating fallback JSON response")
                         parsedResponse = {
                             type: "info",
-                            fillerAudio: "processing_request",
                             response: llmOutput.trim(),
                             needsOTP: false,
                             actionData: {},
@@ -180,17 +178,16 @@ class LLMService {
 
                 // Validate required fields
                 if (!parsedResponse.type || !parsedResponse.response) {
-                    throw new Error("Missing required fields in LLM response")
+                    throw new Error("Missing required fields in SmartLLM response")
                 }
             } catch (parseError) {
-                console.error("❌ Failed to parse LLM response:", parseError)
+                console.error("❌ Failed to parse SmartLLM response:", parseError)
                 console.error("❌ Raw response:", llmOutput)
                 console.error("❌ Error details:", parseError)
 
                 // Create emergency fallback response
                 parsedResponse = {
                     type: "info",
-                    fillerAudio: "processing_request",
                     response: llmOutput.includes("عندك")
                         ? llmOutput.trim()
                         : "عذراً، حدث خطأ في معالجة طلبك",
@@ -202,11 +199,11 @@ class LLMService {
 
             const endTime = Date.now()
             const duration = endTime - startTime
-            console.log(`⚡ LLM took ${duration}ms`)
+            console.log(`⚡ SmartLLM took ${duration}ms`)
 
             return parsedResponse
         } catch (error) {
-            console.error("❌ LLM Service error")
+            console.error("❌ SmartLLM Service error")
             return {
                 type: "ignore",
                 response: "عذراً، حدث خطأ في معالجة طلبك",
@@ -215,7 +212,7 @@ class LLMService {
     }
 
     static isConfigured(): boolean {
-        const instance = LLMService.getInstance()
+        const instance = SmartLLMService.getInstance()
         return !!instance.apiKey
     }
 
@@ -236,4 +233,4 @@ class LLMService {
     }
 }
 
-export default LLMService.getInstance()
+export default SmartLLMService.getInstance()

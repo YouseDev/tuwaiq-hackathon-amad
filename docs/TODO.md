@@ -6,7 +6,7 @@
 -   [x] Setup UI
 -   [x] TEST
 -   [x] Improve UI
--   [ ] Speed up the LLM
+-   [x] Speed up the LLM
 -   [ ] Implement paying the bills
 -   [ ] Implement transfering funds
 -   [ ] Implement bank/ads questions
