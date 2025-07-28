@@ -5,7 +5,9 @@
 -   [x] Setup TTS
 -   [x] Setup UI
 -   [x] TEST
--   [ ] Improve UI
+-   [x] Improve UI
+-   [ ] Speed up the LLM
 -   [ ] Implement paying the bills
 -   [ ] Implement transfering funds
 -   [ ] Implement bank/ads questions
+-   [ ] Polish the UI
