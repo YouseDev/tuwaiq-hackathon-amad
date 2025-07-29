@@ -1,3 +1,5 @@
+# Tasks
+
 -   [x] Setup the project
 -   [x] Setup DATA
 -   [x] Setup STT
@@ -8,6 +10,29 @@
 -   [x] Improve UI
 -   [x] Speed up the LLM
 -   [ ] Implement paying the bills
+-   [ ] Move smart LLM to anthropic sonnet 4
 -   [ ] Implement transfering funds
+-   [ ] Implement card lock/unlock for security
 -   [ ] Implement bank/ads questions
 -   [ ] Polish the UI
+-   [ ] Improve audio visualization with real-time waveforms
+-   [ ] Research openning the voice feature using phone side buttons for accessibility
+-   [ ] Research multi-language support (English, Hindi, Pakistan etc)
+-   [ ] Research banking fraud in Saudi Arabia and how can anas help to prevent it
+
+# BUG
+
+-   [ ] TTS some times does not play the audio
+
+# Potential Ideas
+
+-   [ ] Voice Receipt Scanner - "Anas, I just bought groceries for 247 riyals, categorize it"
+-   [ ] Bill Due Date Alerts - "Remind me 3 days before electricity bill is due"
+-   [ ] ATM Finder by Voice - "Where's the nearest ATM that has cash?"
+-   [ ] Quick Balance Check for Others - "How much does my son Ahmed have in his account?"
+-   [ ] Voice Transaction Search - "When did I last pay Mobily?"
+-   [ ] Spending Limit Alerts - "Stop me if I spend more than 500 riyals today"
+-   [ ] Emergency Cash Request - "Send me 1000 riyals from my savings to checking"
+-   [ ] Voice Expense Splitting - "Split 240 riyals dinner bill with Ahmed and Omar"
+-   [ ] Merchant Payment by Voice Recognition - "Pay Tamimi supermarket 156 riyals"
+-   [ ] Voice Banking Hours - "When does Rajhi bank branch in Riyadh close?"

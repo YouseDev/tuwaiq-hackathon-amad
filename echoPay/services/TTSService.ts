@@ -38,10 +38,14 @@ class TTSService {
             await setAudioModeAsync({
                 allowsRecording: false,
                 playsInSilentMode: true,
+                shouldDuckOthers: false,
+                playThroughEarpieceAndroid: false,
             })
             this.audioConfigured = true
+            console.log("✅ Audio session configured")
         } catch (err) {
             console.error("❌ Audio session config failed:", err)
+            this.audioConfigured = false
         }
     }
 
@@ -82,16 +86,40 @@ class TTSService {
     /* ---------- Playback ---------- */
     private async playAudio(uri: string) {
         try {
+            // Ensure audio session is configured before playing
+            if (!this.audioConfigured) {
+                await this.configureAudioSession()
+                // Wait a bit for audio session to stabilize
+                await new Promise(resolve => setTimeout(resolve, 100))
+            }
+
             this.currentPlayer = createAudioPlayer(uri)
             this.currentPlayer.volume = 1.0
             this.isPlaying = true
 
             this.currentPlayer.addListener("playbackStatusUpdate", (s) => {
-                if (s.isLoaded && s.didJustFinish) this.onPlaybackFinished(uri)
+                if (s.isLoaded && s.didJustFinish) {
+                    this.onPlaybackFinished(uri)
+                } else if (s.error) {
+                    console.error("❌ Audio playback error:", s.error)
+                    this.onPlaybackFinished(uri)
+                }
             })
 
             await this.currentPlayer.play()
             console.log("▶️ Audio playing")
+
+            // Check if audio is actually playing after a short delay
+            setTimeout(() => {
+                if (this.currentPlayer && this.isPlaying) {
+                    this.currentPlayer.getCurrentStatus().then(status => {
+                        if (!status.isLoaded || status.error) {
+                            console.error("❌ Audio failed to load properly:", status)
+                        }
+                    })
+                }
+            }, 500)
+
         } catch (err) {
             console.error("❌ Playback error:", err)
             this.isPlaying = false

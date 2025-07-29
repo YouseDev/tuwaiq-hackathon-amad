@@ -1,10 +1,10 @@
-import { ChatMessage } from "../types/core"
+import { ChatMessage, BillSelectionData, BillPaymentData } from "../types/core"
 
 interface SmartLLMResponse {
-    type: "info" | "action" | "ignore"
+    type: "info" | "action" | "ignore" | "bill_selection" | "bill_payment"
     response: string
     needsOTP?: boolean
-    actionData?: any
+    actionData?: any | BillSelectionData | BillPaymentData
 }
 
 class SmartLLMService {

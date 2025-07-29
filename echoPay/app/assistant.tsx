@@ -25,10 +25,13 @@ import useSTTService from "../services/STTService"
 import LLMService from "../services/LLMService"
 import FastLLMService from "../services/FastLLMService"
 import TTSService from "../services/TTSService"
+import PaymentService from "../services/PaymentService"
 import bankingData from "../assets/data/banking_data.json"
 import tools from "../helpers/tools"
-import { BankingContext, ChatMessage } from "../types/core"
+import { BankingContext, ChatMessage, BillSelectionData, BillPaymentData } from "../types/core"
 import { createAudioPlayer } from "expo-audio"
+import BillSelectionCard from "../components/BillSelectionCard"
+import TransactionSuccessCard from "../components/TransactionSuccessCard"
 
 const { width, height } = Dimensions.get("window")
 
@@ -41,6 +44,16 @@ export default function VoiceAssistantScreen() {
     const [aiResponse, setAiResponse] = useState("")
     const [userQuery, setUserQuery] = useState("")
     const [processingMessage, setProcessingMessage] = useState("جاري التفكير...")
+    
+    // Bill payment state
+    const [showBillSelection, setShowBillSelection] = useState(false)
+    const [billSelectionData, setBillSelectionData] = useState<BillSelectionData | null>(null)
+    const [pendingBillPayment, setPendingBillPayment] = useState(false)
+    const [currentBills, setCurrentBills] = useState(bankingData.bills)
+    
+    // Transaction success state
+    const [showTransactionSuccess, setShowTransactionSuccess] = useState(false)
+    const [transactionData, setTransactionData] = useState<any>(null)
     
     // Animation values (old API for some animations)
     const fadeAnim = useRef(new Animated.Value(0)).current
@@ -68,16 +81,22 @@ export default function VoiceAssistantScreen() {
         confidence,
     } = useSTTService()
 
-    // Chat history for context
-    const historyRef = useRef<ChatMessage[]>([
-        {
-            role: "system",
-            content: tools.buildPrompt({
-                ...bankingData,
-                transactions: bankingData.transactions.january_2024,
-            } as unknown as BankingContext),
-        },
-    ])
+    // Chat history for context - initialize with current bills
+    const historyRef = useRef<ChatMessage[]>([])
+    
+    // Initialize history with current bills
+    useEffect(() => {
+        if (historyRef.current.length === 0) {
+            historyRef.current = [{
+                role: "system",
+                content: tools.buildPrompt({
+                    ...bankingData,
+                    transactions: bankingData.transactions.january_2024,
+                    bills: currentBills,
+                } as unknown as BankingContext),
+            }]
+        }
+    }, [currentBills])
 
     // Command processing
     const [commandBuffer, setCommandBuffer] = useState<string[]>([])
@@ -257,16 +276,42 @@ export default function VoiceAssistantScreen() {
                 content: smartResult.response,
             })
 
-            // Start TTS first, then show response
-            setVoiceState("speaking")
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-            
-            // Small delay to let TTS start before showing text
-            setTimeout(() => {
-                setAiResponse(smartResult.response)
-            }, 300)
-            
-            await TTSService.speak(smartResult.response)
+            // Handle different response types
+            if (smartResult.type === "bill_selection") {
+                // Show bill selection UI
+                const billData = smartResult.actionData as BillSelectionData
+                setBillSelectionData(billData)
+                setShowBillSelection(true)
+                setPendingBillPayment(true)
+                
+                setVoiceState("speaking")
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+                await TTSService.speak(smartResult.response)
+            } else if (smartResult.type === "bill_payment") {
+                // Handle payment confirmation
+                const paymentData = smartResult.actionData as BillPaymentData
+                
+                if (paymentData.action === "confirm_payment") {
+                    await handleBillPayment(paymentData)
+                } else if (paymentData.action === "cancel") {
+                    setShowBillSelection(false)
+                    setBillSelectionData(null)
+                    setPendingBillPayment(false)
+                    setVoiceState("speaking")
+                    await TTSService.speak(smartResult.response)
+                }
+            } else {
+                // Regular response handling
+                setVoiceState("speaking")
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+                
+                // Small delay to let TTS start before showing text
+                setTimeout(() => {
+                    setAiResponse(smartResult.response)
+                }, 300)
+                
+                await TTSService.speak(smartResult.response)
+            }
             
             // Keep the answer visible - don't return to idle automatically
             // User can press button again for new question
@@ -280,6 +325,87 @@ export default function VoiceAssistantScreen() {
         setTimeout(() => {
             processedCommandRef.current = ""
         }, 5000)
+    }
+
+    const handleBillPayment = async (paymentData: BillPaymentData) => {
+        try {
+            setVoiceState("processing")
+            setProcessingMessage("جاري معالجة الدفع...")
+            
+            const result = await PaymentService.processBillPayment(
+                paymentData,
+                currentBills,
+                "1234" // Mock OTP for demo
+            )
+            
+            if (result.success) {
+                setShowBillSelection(false)
+                setBillSelectionData(null)
+                setPendingBillPayment(false)
+                
+                // Update the bills state and banking context for future queries
+                if (result.updatedBills) {
+                    setCurrentBills(result.updatedBills)
+                    
+                    const updatedContext = {
+                        ...bankingData,
+                        transactions: bankingData.transactions.january_2024,
+                        bills: result.updatedBills
+                    } as unknown as BankingContext
+                    
+                    // Update the system message in history with new data
+                    historyRef.current[0] = {
+                        role: "system",
+                        content: tools.buildPrompt(updatedContext)
+                    }
+                }
+                
+                // Show transaction success screen
+                const paidBills = currentBills.filter(bill => 
+                    paymentData.final_bills.includes(bill.id)
+                )
+                
+                setTransactionData({
+                    transactionId: result.transactionId || `TXN${Date.now()}`,
+                    paidBills: paidBills,
+                    totalAmount: paymentData.total_amount,
+                    paymentSource: paymentData.payment_source,
+                    timestamp: new Date().toISOString()
+                })
+                
+                setShowTransactionSuccess(true)
+                setVoiceState("speaking")
+                await TTSService.speak(result.message)
+            } else {
+                setAiResponse(result.message)
+                setVoiceState("speaking")
+                await TTSService.speak(result.message)
+            }
+        } catch (error) {
+            console.error("Payment error:", error)
+            setAiResponse("حدث خطأ في معالجة الدفع")
+            setVoiceState("speaking")
+            await TTSService.speak("حدث خطأ في معالجة الدفع")
+        }
+    }
+
+    const handleBillConfirm = () => {
+        setShowBillSelection(false)
+        handleVoiceCommand("نعم أكد الدفع")
+    }
+
+    const handleBillCancel = () => {
+        setShowBillSelection(false)
+        setBillSelectionData(null)
+        setPendingBillPayment(false)
+        handleVoiceCommand("إلغاء الدفع")
+    }
+
+    const handleTransactionDismiss = () => {
+        setShowTransactionSuccess(false)
+        setTransactionData(null)
+        setAiResponse("")
+        setVoiceState("idle")
     }
 
     const playFillerAudio = (fillerKey: string) => {
@@ -308,6 +434,14 @@ export default function VoiceAssistantScreen() {
             if (voiceState === "speaking") {
                 setAiResponse("")
                 setUserQuery("")
+            }
+            
+            // Reset bill payment and transaction state if not pending
+            if (!pendingBillPayment) {
+                setShowBillSelection(false)
+                setBillSelectionData(null)
+                setShowTransactionSuccess(false)
+                setTransactionData(null)
             }
             
             // Reset processing message
@@ -635,8 +769,29 @@ export default function VoiceAssistantScreen() {
 
     const renderSpeakingState = () => (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 }}>
+            {/* Transaction Success Card */}
+            {showTransactionSuccess && transactionData && (
+                <View style={{ flex: 1, justifyContent: 'center', width: '100%' }}>
+                    <TransactionSuccessCard
+                        data={transactionData}
+                        onDismiss={handleTransactionDismiss}
+                    />
+                </View>
+            )}
+            
+            {/* Bill Selection Card */}
+            {showBillSelection && billSelectionData && !showTransactionSuccess && (
+                <View style={{ flex: 1, justifyContent: 'center', width: '100%' }}>
+                    <BillSelectionCard
+                        data={billSelectionData}
+                        onConfirm={handleBillConfirm}
+                        onCancel={handleBillCancel}
+                    />
+                </View>
+            )}
+            
             {/* AI Response - Large and Centered */}
-            {aiResponse && (
+            {aiResponse && !showBillSelection && !showTransactionSuccess && (
                 <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
                     <Text
                         style={{
