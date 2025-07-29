@@ -3,6 +3,22 @@ interface FastLLMResponse {
     waitingMessage: string
 }
 
+// Pre-written Arabic filler messages for different request types
+const FILLER_MESSAGES = {
+    balance_check: ["أتحقق من رصيدك", "لحظة، أراجع حسابك", "أستعلم عن رصيدك"],
+    transaction_search: [
+        "أبحث في معاملاتك",
+        "أراجع تاريخ حسابك",
+        "أفتش في المعاملات",
+    ],
+    transfer_payment: [
+        "أجهز التحويل",
+        "أعالج المدفوعات",
+        "أحضر تفاصيل الفواتير",
+    ],
+    general_request: ["لحظة من فضلك", "أعمل على طلبك", "لحظة، أساعدك"],
+}
+
 class FastLLMService {
     private static instance: FastLLMService
     private apiKey: string
@@ -22,29 +38,20 @@ class FastLLMService {
         try {
             const startTime = Date.now()
 
-            const prompt = `You are a fast assistant for a Saudi banking voice app. Analyze user command and provide appropriate filler audio + contextual waiting message.
+            // Use FastLLM only for categorization, not Arabic generation
+            const prompt = `Categorize this Saudi banking voice command into one category:
 
 USER COMMAND: "${userCommand}"
 
-AVAILABLE FILLER AUDIO:
-- "balance_check": For balance inquiries and account status
-- "transaction_search": For searching transactions and financial history  
-- "general_request": For general processing and queries
-- "transfer_payment": For transfers and bill payments
+CATEGORIES:
+- balance_check: ONLY balance inquiries, account totals, "كم رصيدي", "مجموع حسابي"
+- transaction_search: Transaction history, bills inquiry, spending queries, "وش صرفت", "فواتير", "ايش عندي فواتير"  
+- transfer_payment: Transfers, bill payments, "حول فلوس", "ادفع", "سدد"
+- general_request: Greetings, general help, unclear requests
 
-RESPONSE RULES:
-1. Select appropriate fillerAudio key
-2. Create contextual waitingMessage in Saudi Arabic (casual, professional)
-3. Make waiting message specific to the request type
-4. Keep message short (≤ 3 words)
+CRITICAL: "فواتير" (bills) = transaction_search, NOT balance_check
 
-EXAMPLES:
-{"fillerAudio": "balance_check", "waitingMessage": "أتحقق من رصيدك"}
-{"fillerAudio": "transaction_search", "waitingMessage": "أبحث في معاملاتك"}
-{"fillerAudio": "transfer_payment", "waitingMessage": "أجهز التحويل"}
-{"fillerAudio": "general_request", "waitingMessage": "لحظة من فضلك"}
-
-Respond with JSON only:`
+Respond with ONLY the category name (no JSON, no explanation):`
 
             const response = await fetch(
                 "https://api.openai.com/v1/chat/completions",
@@ -62,68 +69,54 @@ Respond with JSON only:`
                                 content: prompt,
                             },
                         ],
-                        max_tokens: 50,
+                        max_tokens: 10,
                         temperature: 0.1,
                     }),
                 },
             )
 
-            if (!response.ok) {
-                const errorText = await response.text()
-                console.error(
-                    `❌ FastLLM API error ${response.status}:`,
-                    errorText,
-                )
-                throw new Error(`FastLLM API error: ${response.status}`)
-            }
+            let category = "general_request" // default fallback
 
-            const data = await response.json()
-            const content = data.choices?.[0]?.message?.content
+            if (response.ok) {
+                const data = await response.json()
+                const content = data.choices?.[0]?.message?.content?.trim()
 
-            if (!content) {
-                throw new Error("No response content from FastLLM")
-            }
-
-            // Parse JSON response
-            let parsedResponse: FastLLMResponse
-            try {
-                // Extract JSON if embedded in text
-                const jsonMatch = content.match(/\{[^}]*\}/)
-                if (jsonMatch) {
-                    parsedResponse = JSON.parse(jsonMatch[0])
-                } else {
-                    parsedResponse = JSON.parse(content)
-                }
-
-                // Validate response
-                if (!parsedResponse.fillerAudio || !parsedResponse.waitingMessage) {
-                    throw new Error("Missing required fields in FastLLM response")
-                }
-            } catch (parseError) {
-                console.error(
-                    "❌ Failed to parse FastLLM response:",
-                    parseError,
-                )
-                console.error("❌ Raw response:", content)
-
-                // Fallback to general_request
-                parsedResponse = {
-                    fillerAudio: "general_request",
-                    waitingMessage: "لحظة من فضلك"
+                // Validate category
+                if (
+                    content &&
+                    FILLER_MESSAGES[content as keyof typeof FILLER_MESSAGES]
+                ) {
+                    category = content
+                    console.log(`✅ FastLLM categorized as: ${category}`)
                 }
             }
+
+            // Select random message from pre-written Arabic messages
+            const messages =
+                FILLER_MESSAGES[category as keyof typeof FILLER_MESSAGES]
+            const randomMessage =
+                messages[Math.floor(Math.random() * messages.length)]
 
             const endTime = Date.now()
             const duration = endTime - startTime
             console.log(`⚡ FastLLM took ${duration}ms`)
 
-            return parsedResponse
+            return {
+                fillerAudio: category,
+                waitingMessage: randomMessage,
+            }
         } catch (error) {
             console.error("❌ FastLLM Service error:", error)
-            // Return safe fallback
+            // Return safe fallback with random general message
+            const generalMessages = FILLER_MESSAGES.general_request
+            const randomMessage =
+                generalMessages[
+                    Math.floor(Math.random() * generalMessages.length)
+                ]
+
             return {
                 fillerAudio: "general_request",
-                waitingMessage: "لحظة من فضلك"
+                waitingMessage: randomMessage,
             }
         }
     }

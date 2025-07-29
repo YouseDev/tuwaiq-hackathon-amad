@@ -38,8 +38,6 @@ class TTSService {
             await setAudioModeAsync({
                 allowsRecording: false,
                 playsInSilentMode: true,
-                shouldDuckOthers: false,
-                playThroughEarpieceAndroid: false,
             })
             this.audioConfigured = true
             console.log("✅ Audio session configured")
@@ -73,7 +71,7 @@ class TTSService {
     async stop() {
         if (!this.currentPlayer) return
         try {
-            await this.currentPlayer.pause()
+            this.currentPlayer.pause()
             this.currentPlayer.remove()
         } catch (err) {
             console.error("❌ Stop error:", err)
@@ -90,36 +88,16 @@ class TTSService {
             if (!this.audioConfigured) {
                 await this.configureAudioSession()
                 // Wait a bit for audio session to stabilize
-                await new Promise(resolve => setTimeout(resolve, 100))
+                await new Promise((resolve) => setTimeout(resolve, 100))
             }
 
+            console.log("🎵 Creating audio player for:", uri)
             this.currentPlayer = createAudioPlayer(uri)
             this.currentPlayer.volume = 1.0
             this.isPlaying = true
 
-            this.currentPlayer.addListener("playbackStatusUpdate", (s) => {
-                if (s.isLoaded && s.didJustFinish) {
-                    this.onPlaybackFinished(uri)
-                } else if (s.error) {
-                    console.error("❌ Audio playback error:", s.error)
-                    this.onPlaybackFinished(uri)
-                }
-            })
-
             await this.currentPlayer.play()
             console.log("▶️ Audio playing")
-
-            // Check if audio is actually playing after a short delay
-            setTimeout(() => {
-                if (this.currentPlayer && this.isPlaying) {
-                    this.currentPlayer.getCurrentStatus().then(status => {
-                        if (!status.isLoaded || status.error) {
-                            console.error("❌ Audio failed to load properly:", status)
-                        }
-                    })
-                }
-            }, 500)
-
         } catch (err) {
             console.error("❌ Playback error:", err)
             this.isPlaying = false
@@ -130,8 +108,11 @@ class TTSService {
     private async onPlaybackFinished(uri: string) {
         console.log("✅ Playback finished")
         this.isPlaying = false
-        this.currentPlayer?.remove()
-        this.currentPlayer = null
+
+        if (this.currentPlayer) {
+            this.currentPlayer.remove()
+            this.currentPlayer = null
+        }
 
         if (uri.startsWith("file://")) this.cleanupFile(uri)
     }
@@ -154,7 +135,7 @@ class TTSService {
         const url = `${TTS_CONFIG.apiUrl}/${TTS_CONFIG.voiceId}?output_format=mp3_44100_128`
         const body = {
             text,
-            model_id: "eleven_multilingual_v2",
+            model_id: "eleven_flash_v2_5",
             voice_settings: TTS_CONFIG.voiceSettings,
         }
 

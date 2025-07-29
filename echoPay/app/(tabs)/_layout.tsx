@@ -13,7 +13,7 @@ export default function TabLayout() {
                     paddingTop: 8,
                     height: 80,
                 },
-                tabBarActiveTintColor: "#7C3AED", // purple-600
+                tabBarActiveTintColor: "#000000", // black
                 tabBarInactiveTintColor: "#6b7280", // gray-500
                 tabBarLabelStyle: {
                     fontSize: 12,
@@ -45,6 +45,15 @@ export default function TabLayout() {
                     title: "العمليات",
                     tabBarIcon: ({ color, size }) => (
                         <Feather name="list" size={size} color={color} />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="beneficiaries"
+                options={{
+                    title: "المستفيدين",
+                    tabBarIcon: ({ color, size }) => (
+                        <Feather name="users" size={size} color={color} />
                     ),
                 }}
             />

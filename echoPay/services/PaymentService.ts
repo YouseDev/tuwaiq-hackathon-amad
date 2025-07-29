@@ -76,12 +76,12 @@ class PaymentService {
             // Generate transaction ID
             const transactionId = `TXN${Date.now()}`
 
-            // Simulate random success/failure for demo (90% success rate)
-            const isSuccessful = Math.random() > 0.1
+            // Always succeed for hackathon demo
+            const isSuccessful = true
 
             if (isSuccessful) {
                 // Update bill status in banking data
-                this.updateBillStatus(paymentData.final_bills, "مدفوعة")
+                this.updateBillStatus(paymentData.final_bills, "غير مستحقة")
 
                 const paidBillsNames = billsToPay.map(bill => bill.provider).join("، ")
                 

@@ -2,18 +2,20 @@ import React, { useState } from "react"
 import { ScrollView, View, Text, Pressable } from "react-native"
 import { router } from "expo-router"
 import { Feather } from "@expo/vector-icons"
+import { LinearGradient } from 'expo-linear-gradient'
 import BalanceSection from "../../components/BalanceSection"
 import CreditCardSection from "../../components/CreditCardSection"
+import { useAccounts } from "../../context/AccountContext"
 import bankingData from "../../assets/data/banking_data.json"
 
 export default function AccountsScreen() {
-    /* -------- Demo banking data -------- */
-    const [userAccount] = useState(bankingData.accounts)
+    /* -------- Dynamic account data -------- */
+    const { accounts: userAccount } = useAccounts()
     const [userCards] = useState(bankingData.creditCards)
 
     /* -------- UI -------- */
     return (
-        <View className="flex-1 bg-white pt-16">
+        <View style={{ flex: 1, backgroundColor: '#f9eeea', paddingTop: 64 }}>
             <ScrollView
                 className="flex-1 w-full px-0 py-6"
                 contentContainerStyle={{ paddingBottom: 100 }}
@@ -21,9 +23,11 @@ export default function AccountsScreen() {
                 {/* Header */}
                 <View className="w-full px-6 mb-8">
                     <Text
-                        className="text-gray-800 text-4xl text-right"
                         style={{
+                            fontSize: 36,
+                            color: '#000000',
                             fontFamily: "AppFontBold",
+                            textAlign: 'right'
                         }}
                     >
                         مساء الخير ، أحمد
@@ -45,17 +49,25 @@ export default function AccountsScreen() {
                     width: 60,
                     height: 60,
                     borderRadius: 30,
-                    backgroundColor: "#7C3AED",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    shadowColor: "#7C3AED",
+                    shadowColor: "#000000",
                     shadowOffset: { width: 0, height: 4 },
                     shadowOpacity: 0.3,
                     shadowRadius: 8,
                     elevation: 8,
                 }}
             >
-                <Feather name="mic" size={24} color="#fff" />
+                <LinearGradient
+                    colors={['#1F2937', '#374151']}
+                    style={{
+                        width: 60,
+                        height: 60,
+                        borderRadius: 30,
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <Feather name="mic" size={24} color="#fff" />
+                </LinearGradient>
             </Pressable>
         </View>
     )

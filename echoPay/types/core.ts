@@ -38,6 +38,32 @@ export interface BillPaymentData {
     requires_otp: boolean
 }
 
+export interface TransferSelectionData {
+    intent: "transfer_funds"
+    recipient: {
+        name: string
+        relationship: string
+        accountNumber: string
+        phone: string
+        lastTransfer?: string
+        frequentAmount?: number
+    }
+    amount: number
+    sourceAccount: "checking" | "savings"
+    sourceAccountDisplay: string
+    availableBalance: number
+    remainingBalance: number
+}
+
+export interface TransferData {
+    action: "confirm_transfer" | "modify_transfer" | "cancel"
+    recipient_account: string
+    recipient_name: string
+    amount: number
+    source_account: "checking" | "savings"
+    requires_otp: boolean
+}
+
 export type ChatMessage = {
     role: "system" | "user" | "assistant"
     content: string

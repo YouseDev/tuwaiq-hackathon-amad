@@ -1,10 +1,10 @@
-import { ChatMessage, BillSelectionData, BillPaymentData } from "../types/core"
+import { ChatMessage, BillSelectionData, BillPaymentData, TransferSelectionData, TransferData } from "../types/core"
 
 interface SmartLLMResponse {
-    type: "info" | "action" | "ignore" | "bill_selection" | "bill_payment"
+    type: "info" | "action" | "ignore" | "bill_selection" | "bill_payment" | "transfer_selection" | "transfer_payment" | "transfer_success"
     response: string
     needsOTP?: boolean
-    actionData?: any | BillSelectionData | BillPaymentData
+    actionData?: any | BillSelectionData | BillPaymentData | TransferSelectionData | TransferData
 }
 
 class SmartLLMService {
@@ -19,7 +19,7 @@ class SmartLLMService {
     }
 
     constructor() {
-        this.apiKey = process.env.EXPO_PUBLIC_OPENAI_KEY || ""
+        this.apiKey = process.env.EXPO_PUBLIC_ANTHROPIC_KEY || ""
     }
 
     async processUserQuery(
@@ -32,67 +32,58 @@ class SmartLLMService {
         try {
             const startTime = Date.now()
 
-            // Build the input for o4-mini format
-            const input = []
+            // Build messages for Claude format
+            const messages = []
+            let systemPrompt = ""
 
-            // Add system prompt as developer role
+            // Extract system message
             const systemMessage = trimmed.find((msg) => msg.role === "system")
             if (systemMessage) {
-                input.push({
-                    role: "developer",
-                    content: [
-                        {
-                            type: "input_text",
-                            text: systemMessage.content,
-                        },
-                    ],
-                })
+                systemPrompt = systemMessage.content
+                console.log("🧠 SmartLLM System Prompt Length:", systemPrompt.length)
+                console.log("🧠 SmartLLM System Prompt (first 300 chars):", systemPrompt.substring(0, 300) + "...")
+                
+                // Check if bills data is present in system prompt
+                const hasBillsData = systemPrompt.includes('شركة الكهرباء السعودية') || systemPrompt.includes('"bills"')
+                console.log("🧠 SmartLLM System Prompt contains bills data:", hasBillsData)
+                
+                if (hasBillsData) {
+                    const billsSection = systemPrompt.match(/Bills:.*?\],/s)?.[0]
+                    console.log("🧠 SmartLLM Bills section (first 200 chars):", billsSection?.substring(0, 200) + "...")
+                }
             }
 
-            // Add conversation history as user inputs
+            // Add conversation history
             const conversationHistory = trimmed.filter(
                 (msg) => msg.role !== "system",
             )
-            if (conversationHistory.length > 0) {
-                const historyText = conversationHistory
-                    .map(
-                        (msg) =>
-                            `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`,
-                    )
-                    .join("\n\n")
-
-                input.push({
-                    role: "user",
-                    content: [
-                        {
-                            type: "input_text",
-                            text: historyText,
-                        },
-                    ],
+            
+            console.log("🧠 SmartLLM Conversation History:")
+            for (const msg of conversationHistory) {
+                console.log(`  ${msg.role}: "${msg.content}"`)
+                messages.push({
+                    role: msg.role === "user" ? "user" : "assistant",
+                    content: msg.content,
                 })
             }
+            
+            console.log("🧠 SmartLLM Total Messages:", messages.length)
+            console.log("🧠 SmartLLM Latest User Message:", messages[messages.length - 1]?.content || "NONE")
 
             const response = await fetch(
-                "https://api.openai.com/v1/responses",
+                "https://api.anthropic.com/v1/messages",
                 {
                     method: "POST",
                     headers: {
-                        Authorization: `Bearer ${this.apiKey}`,
+                        "x-api-key": this.apiKey,
                         "Content-Type": "application/json",
+                        "anthropic-version": "2023-06-01",
                     },
                     body: JSON.stringify({
-                        model: "o4-mini",
-                        input: input,
-                        text: {
-                            format: {
-                                type: "text",
-                            },
-                        },
-                        reasoning: {
-                            effort: "low",
-                        },
-                        tools: [],
-                        store: true,
+                        model: "claude-3-5-sonnet-20241022",
+                        max_tokens: 1024,
+                        system: systemPrompt,
+                        messages: messages,
                     }),
                 },
             )
@@ -100,51 +91,31 @@ class SmartLLMService {
             if (!response.ok) {
                 const errorText = await response.text()
                 console.error(
-                    `❌ o4-mini API error ${response.status}:`,
+                    `❌ Claude API error ${response.status}:`,
                     errorText,
                 )
-                throw new Error(`o4-mini API error: ${response.status}`)
+                throw new Error(`Claude API error: ${response.status}`)
             }
 
             const data = await response.json()
             // Response received
 
-            // o4-mini response structure - extract from nested output
+            // Claude response structure - extract from content array
             let llmOutput = null
 
-            // Try to find the message output in the array
-            if (data.output && Array.isArray(data.output)) {
-                const messageOutput = data.output.find(
-                    (item: any) => item.type === "message",
-                )
-                if (messageOutput?.content?.[0]?.text) {
-                    llmOutput = messageOutput.content[0].text
-                    console.log(
-                        "✅ Found content in data.output[message].content[0].text",
-                    )
-                }
-            }
-
-            // Fallback attempts
-            if (!llmOutput && data.text && typeof data.text === "string") {
-                llmOutput = data.text
-                console.log("✅ Found content in data.text (fallback)")
-            } else if (!llmOutput && data.content) {
-                llmOutput = data.content
-                console.log("✅ Found content in data.content (fallback)")
-            } else if (!llmOutput && data.choices?.[0]?.message?.content) {
-                llmOutput = data.choices[0].message.content
-                console.log(
-                    "✅ Found content in data.choices[0].message.content (fallback)",
-                )
+            // Claude returns content in the format: { content: [{ text: "..." }] }
+            if (data.content && Array.isArray(data.content) && data.content[0]?.text) {
+                llmOutput = data.content[0].text
+                console.log("✅ Found content in Claude response")
+                console.log("🧠 Claude Raw Response:", llmOutput)
             }
 
             if (!llmOutput) {
                 console.error(
-                    "❌ No content found in o4-mini response. Available keys:",
+                    "❌ No content found in Claude response. Available keys:",
                     Object.keys(data),
                 )
-                throw new Error("No response content from o4-mini")
+                throw new Error("No response content from Claude")
             }
 
             // Parse response
@@ -155,7 +126,7 @@ class SmartLLMService {
                 // Check if response looks like JSON
                 if (!llmOutput.trim().startsWith("{")) {
                     console.warn(
-                        "⚠️ SmartLLM returned non-JSON response, attempting to wrap...",
+                        "⚠️ Claude returned non-JSON response, attempting to wrap...",
                     )
                     // Try to extract JSON if it's embedded
                     const jsonMatch = llmOutput.match(/\{[\s\S]*\}/)
@@ -178,10 +149,13 @@ class SmartLLMService {
 
                 // Validate required fields
                 if (!parsedResponse.type || !parsedResponse.response) {
-                    throw new Error("Missing required fields in SmartLLM response")
+                    throw new Error("Missing required fields in Claude response")
                 }
+                
+                console.log("🧠 Claude Parsed Response Type:", parsedResponse.type)
+                console.log("🧠 Claude Parsed Response Text:", parsedResponse.response)
             } catch (parseError) {
-                console.error("❌ Failed to parse SmartLLM response:", parseError)
+                console.error("❌ Failed to parse Claude response:", parseError)
                 console.error("❌ Raw response:", llmOutput)
                 console.error("❌ Error details:", parseError)
 
@@ -199,11 +173,11 @@ class SmartLLMService {
 
             const endTime = Date.now()
             const duration = endTime - startTime
-            console.log(`⚡ SmartLLM took ${duration}ms`)
+            console.log(`⚡ SmartLLM (Claude) took ${duration}ms`)
 
             return parsedResponse
         } catch (error) {
-            console.error("❌ SmartLLM Service error")
+            console.error("❌ SmartLLM (Claude) Service error:", error)
             return {
                 type: "ignore",
                 response: "عذراً، حدث خطأ في معالجة طلبك",

@@ -23,89 +23,57 @@ export default function BillSelectionCard({ data, onConfirm, onCancel }: BillSel
     return (
         <View style={{
             backgroundColor: '#ffffff',
-            borderRadius: 16,
-            padding: 24,
-            margin: 16,
+            borderRadius: 12,
+            padding: 12,
+            margin: 8,
             borderWidth: 1,
             borderColor: '#E5E7EB',
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            elevation: 5,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.08,
+            shadowRadius: 4,
+            elevation: 3,
         }}>
-            {/* Header */}
-            <View style={{ alignItems: 'center', marginBottom: 20 }}>
-                <View style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 24,
-                    backgroundColor: '#3B82F6',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: 12
-                }}>
-                    <Feather name="credit-card" size={24} color="#ffffff" />
-                </View>
-                <Text style={{
-                    fontSize: 24,
-                    color: '#1F2937',
-                    fontFamily: 'AppFontBold',
-                    textAlign: 'center'
-                }}>
-                    تأكيد دفع الفواتير
-                </Text>
-            </View>
-
-            {/* Bills List */}
-            <View style={{ marginBottom: 20 }}>
+            {/* Compact Bills List */}
+            <View style={{ marginBottom: 8 }}>
                 {data.matched_bills.map((bill, index) => (
                     <View key={bill.id} style={{
                         flexDirection: 'row',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        paddingVertical: 12,
+                        paddingVertical: 6,
                         borderBottomWidth: index < data.matched_bills.length - 1 ? 1 : 0,
                         borderBottomColor: '#F3F4F6'
                     }}>
-                        <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                        <View style={{ flex: 1, paddingRight: 12 }}>
                             <Text style={{
-                                fontSize: 18,
-                                color: '#1F2937',
+                                fontSize: 16,
+                                color: '#000000',
                                 fontFamily: 'AppFontBold',
                                 textAlign: 'right'
                             }}>
                                 {bill.provider}
                             </Text>
-                            <Text style={{
-                                fontSize: 14,
-                                color: '#6B7280',
-                                fontFamily: 'AppFontRegular',
-                                textAlign: 'right',
-                                marginTop: 2
-                            }}>
-                                تاريخ الاستحقاق: {formatDate(bill.dueDate)}
-                            </Text>
                         </View>
-                        <View style={{ alignItems: 'flex-start', marginLeft: 16 }}>
+                        <View style={{ alignItems: 'flex-start' }}>
                             <Text style={{
-                                fontSize: 18,
+                                fontSize: 16,
                                 color: '#DC2626',
                                 fontFamily: 'AppFontBold'
                             }}>
-                                {formatAmount(bill.amount)}
+                                {bill.amount} ر.س
                             </Text>
                         </View>
                     </View>
                 ))}
             </View>
 
-            {/* Total */}
+            {/* Compact Total */}
             <View style={{
-                backgroundColor: '#F3F4F6',
-                borderRadius: 12,
-                padding: 16,
-                marginBottom: 20
+                backgroundColor: '#F8F9FA',
+                borderRadius: 8,
+                padding: 10,
+                marginBottom: 8
             }}>
                 <View style={{
                     flexDirection: 'row',
@@ -113,40 +81,41 @@ export default function BillSelectionCard({ data, onConfirm, onCancel }: BillSel
                     alignItems: 'center'
                 }}>
                     <Text style={{
-                        fontSize: 20,
-                        color: '#1F2937',
-                        fontFamily: 'AppFontBold'
+                        fontSize: 16,
+                        color: '#000000',
+                        fontFamily: 'AppFontBold',
+                        textAlign: 'right'
                     }}>
-                        المجموع الكلي
+                        المجموع
                     </Text>
                     <Text style={{
-                        fontSize: 24,
+                        fontSize: 18,
                         color: '#DC2626',
                         fontFamily: 'AppFontBold'
                     }}>
-                        {formatAmount(data.total_amount)}
+                        {data.total_amount} ر.س
                     </Text>
                 </View>
             </View>
 
-            {/* Action Buttons */}
+            {/* Compact Action Buttons */}
             <View style={{
                 flexDirection: 'row',
-                gap: 12
+                gap: 8
             }}>
                 <Pressable
                     onPress={onCancel}
                     style={{
                         flex: 1,
                         backgroundColor: '#F3F4F6',
-                        borderRadius: 12,
-                        paddingVertical: 16,
+                        borderRadius: 8,
+                        paddingVertical: 10,
                         alignItems: 'center',
                         justifyContent: 'center'
                     }}
                 >
                     <Text style={{
-                        fontSize: 18,
+                        fontSize: 16,
                         color: '#6B7280',
                         fontFamily: 'AppFontBold'
                     }}>
@@ -159,18 +128,18 @@ export default function BillSelectionCard({ data, onConfirm, onCancel }: BillSel
                     style={{
                         flex: 1,
                         backgroundColor: '#3B82F6',
-                        borderRadius: 12,
-                        paddingVertical: 16,
+                        borderRadius: 8,
+                        paddingVertical: 10,
                         alignItems: 'center',
                         justifyContent: 'center'
                     }}
                 >
                     <Text style={{
-                        fontSize: 18,
+                        fontSize: 16,
                         color: '#ffffff',
                         fontFamily: 'AppFontBold'
                     }}>
-                        تأكيد الدفع
+                        تأكيد
                     </Text>
                 </Pressable>
             </View>

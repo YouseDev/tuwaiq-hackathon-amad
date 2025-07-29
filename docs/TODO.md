@@ -9,16 +9,17 @@
 -   [x] TEST
 -   [x] Improve UI
 -   [x] Speed up the LLM
--   [ ] Implement paying the bills
--   [ ] Move smart LLM to anthropic sonnet 4
--   [ ] Implement transfering funds
+-   [x] Implement paying the bills
+-   [x] Move smart LLM to anthropic sonnet 4
+-   [x] Implement transfering funds
 -   [ ] Implement card lock/unlock for security
--   [ ] Implement bank/ads questions
--   [ ] Polish the UI
--   [ ] Improve audio visualization with real-time waveforms
+-   [ ] Brain storm how to implement bank/ads questions
+-   [x] Polish the UI
+-   [x] Improve ai visualization while listening to the user
 -   [ ] Research openning the voice feature using phone side buttons for accessibility
 -   [ ] Research multi-language support (English, Hindi, Pakistan etc)
--   [ ] Research banking fraud in Saudi Arabia and how can anas help to prevent it
+-   [ ] Brain storm how can we implement fraud detection and prevention
+-   [ ] Polish the UI again
 
 # BUG
 

@@ -9,7 +9,7 @@ export default function BillsScreen() {
 
     /* -------- UI -------- */
     return (
-        <View className="flex-1 bg-white pt-16">
+        <View style={{ flex: 1, backgroundColor: '#f9eeea', paddingTop: 64 }}>
             <ScrollView
                 className="flex-1 w-full px-0 py-6"
                 contentContainerStyle={{ paddingBottom: 100 }}
@@ -17,9 +17,11 @@ export default function BillsScreen() {
                 {/* Header */}
                 <View className="w-full px-6 mb-8">
                     <Text
-                        className="text-gray-800 text-4xl text-right"
                         style={{
+                            fontSize: 36,
+                            color: '#000000',
                             fontFamily: "AppFontBold",
+                            textAlign: 'right'
                         }}
                     >
                         الفواتير

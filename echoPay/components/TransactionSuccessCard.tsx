@@ -4,11 +4,21 @@ import { Feather } from "@expo/vector-icons"
 import { Bill } from "../types/core"
 
 interface TransactionData {
-    transactionId: string
-    paidBills: Bill[]
-    totalAmount: number
-    paymentSource: string
-    timestamp: string
+    id?: string
+    type?: "bill" | "transfer"
+    transactionId?: string
+    paidBills?: Bill[]
+    totalAmount?: number
+    amount?: number
+    recipient?: string
+    sourceAccount?: string
+    paymentSource?: string
+    timestamp?: string
+    message?: string
+    updatedBalances?: {
+        checking: number
+        savings: number
+    }
 }
 
 interface TransactionSuccessCardProps {
@@ -18,11 +28,11 @@ interface TransactionSuccessCardProps {
 
 export default function TransactionSuccessCard({ data, onDismiss }: TransactionSuccessCardProps) {
     const formatAmount = (amount: number): string => {
-        return `${amount.toFixed(2)} ريال`
+        return `${amount} ر.س`
     }
 
-    const formatDate = (dateString: string): string => {
-        const date = new Date(dateString)
+    const formatDate = (dateString?: string): string => {
+        const date = dateString ? new Date(dateString) : new Date()
         const options: Intl.DateTimeFormatOptions = {
             year: 'numeric',
             month: 'short',
@@ -33,26 +43,30 @@ export default function TransactionSuccessCard({ data, onDismiss }: TransactionS
         return date.toLocaleDateString('ar-SA', options)
     }
 
-    const getPaymentSourceName = (source: string): string => {
+    const getPaymentSourceName = (source?: string): string => {
         return source === "checking" ? "الحساب الجاري" : "حساب التوفير"
     }
 
+    const isTransfer = data.type === "transfer"
+    const amount = data.amount || data.totalAmount || 0
+    const transactionId = data.id || data.transactionId || `TXN${Date.now()}`
+
     return (
-        <View style={{
+        <Pressable onPress={onDismiss} style={{
             backgroundColor: '#ffffff',
-            borderRadius: 20,
-            padding: 24,
-            margin: 16,
-            borderWidth: 1,
-            borderColor: '#E5E7EB',
-            shadowColor: '#000',
+            borderRadius: 16,
+            padding: 16,
+            margin: 8,
+            borderWidth: 2,
+            borderColor: '#10B981',
+            shadowColor: '#10B981',
             shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.15,
+            shadowOpacity: 0.25,
             shadowRadius: 12,
             elevation: 8,
         }}>
             {/* Success Header */}
-            <View style={{ alignItems: 'center', marginBottom: 24 }}>
+            <View style={{ alignItems: 'center', marginBottom: 16 }}>
                 <View style={{
                     width: 64,
                     height: 64,
@@ -60,35 +74,39 @@ export default function TransactionSuccessCard({ data, onDismiss }: TransactionS
                     backgroundColor: '#10B981',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    marginBottom: 16
+                    marginBottom: 12
                 }}>
                     <Feather name="check" size={32} color="#ffffff" />
                 </View>
                 <Text style={{
-                    fontSize: 28,
+                    fontSize: 24,
                     color: '#10B981',
                     fontFamily: 'AppFontBold',
-                    textAlign: 'center',
-                    marginBottom: 8
-                }}>
-                    تمت العملية بنجاح
-                </Text>
-                <Text style={{
-                    fontSize: 16,
-                    color: '#6B7280',
-                    fontFamily: 'AppFontRegular',
                     textAlign: 'center'
                 }}>
-                    تم دفع فواتيرك بنجاح
+                    {isTransfer ? "تم التحويل بنجاح" : "تمت العملية بنجاح"}
                 </Text>
+                {data.message && (
+                    <Text style={{
+                        fontSize: 16,
+                        color: '#6B7280',
+                        fontFamily: 'AppFontRegular',
+                        textAlign: 'center',
+                        marginTop: 8
+                    }}>
+                        {data.message}
+                    </Text>
+                )}
             </View>
 
             {/* Transaction Details */}
             <View style={{
-                backgroundColor: '#F9FAFB',
-                borderRadius: 16,
-                padding: 20,
-                marginBottom: 20
+                backgroundColor: '#F0FDF4',
+                borderRadius: 12,
+                padding: 12,
+                marginBottom: 12,
+                borderWidth: 1,
+                borderColor: '#BBF7D0'
             }}>
                 <View style={{
                     flexDirection: 'row',
@@ -98,17 +116,17 @@ export default function TransactionSuccessCard({ data, onDismiss }: TransactionS
                 }}>
                     <Text style={{
                         fontSize: 14,
-                        color: '#6B7280',
+                        color: '#15803D',
                         fontFamily: 'AppFontRegular'
                     }}>
                         رقم العملية
                     </Text>
                     <Text style={{
                         fontSize: 16,
-                        color: '#1F2937',
+                        color: '#15803D',
                         fontFamily: 'AppFontBold'
                     }}>
-                        {data.transactionId}
+                        {transactionId}
                     </Text>
                 </View>
 
@@ -116,96 +134,99 @@ export default function TransactionSuccessCard({ data, onDismiss }: TransactionS
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    marginBottom: 12
+                    marginBottom: isTransfer ? 12 : 0
                 }}>
                     <Text style={{
                         fontSize: 14,
-                        color: '#6B7280',
+                        color: '#15803D',
                         fontFamily: 'AppFontRegular'
                     }}>
                         تاريخ العملية
                     </Text>
                     <Text style={{
                         fontSize: 16,
-                        color: '#1F2937',
+                        color: '#15803D',
                         fontFamily: 'AppFontRegular'
                     }}>
                         {formatDate(data.timestamp)}
                     </Text>
                 </View>
 
-                <View style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                }}>
-                    <Text style={{
-                        fontSize: 14,
-                        color: '#6B7280',
-                        fontFamily: 'AppFontRegular'
-                    }}>
-                        مصدر الدفع
-                    </Text>
-                    <Text style={{
-                        fontSize: 16,
-                        color: '#1F2937',
-                        fontFamily: 'AppFontRegular'
-                    }}>
-                        {getPaymentSourceName(data.paymentSource)}
-                    </Text>
-                </View>
-            </View>
-
-            {/* Paid Bills */}
-            <View style={{ marginBottom: 20 }}>
-                <Text style={{
-                    fontSize: 18,
-                    color: '#1F2937',
-                    fontFamily: 'AppFontBold',
-                    textAlign: 'right',
-                    marginBottom: 12
-                }}>
-                    الفواتير المدفوعة
-                </Text>
-                
-                {data.paidBills.map((bill, index) => (
-                    <View key={bill.id} style={{
+                {isTransfer && data.recipient && (
+                    <View style={{
                         flexDirection: 'row',
                         justifyContent: 'space-between',
-                        alignItems: 'center',
-                        paddingVertical: 8,
-                        borderBottomWidth: index < data.paidBills.length - 1 ? 1 : 0,
-                        borderBottomColor: '#F3F4F6'
+                        alignItems: 'center'
                     }}>
-                        <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                            <Text style={{
-                                fontSize: 16,
-                                color: '#1F2937',
-                                fontFamily: 'AppFontBold',
-                                textAlign: 'right'
-                            }}>
-                                {bill.provider}
-                            </Text>
-                        </View>
-                        <View style={{ alignItems: 'flex-start', marginLeft: 16 }}>
-                            <Text style={{
-                                fontSize: 16,
-                                color: '#10B981',
-                                fontFamily: 'AppFontBold'
-                            }}>
-                                {formatAmount(bill.amount)}
-                            </Text>
-                        </View>
+                        <Text style={{
+                            fontSize: 14,
+                            color: '#15803D',
+                            fontFamily: 'AppFontRegular'
+                        }}>
+                            المستلم
+                        </Text>
+                        <Text style={{
+                            fontSize: 16,
+                            color: '#15803D',
+                            fontFamily: 'AppFontBold'
+                        }}>
+                            {data.recipient}
+                        </Text>
                     </View>
-                ))}
+                )}
             </View>
+
+            {/* Bills Section (for bill payments only) */}
+            {!isTransfer && data.paidBills && data.paidBills.length > 0 && (
+                <View style={{ marginBottom: 12 }}>
+                    <Text style={{
+                        fontSize: 18,
+                        color: '#15803D',
+                        fontFamily: 'AppFontBold',
+                        textAlign: 'right',
+                        marginBottom: 12
+                    }}>
+                        الفواتير المدفوعة
+                    </Text>
+                    
+                    {data.paidBills.map((bill, index) => (
+                        <View key={bill.id} style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            paddingVertical: 8,
+                            borderBottomWidth: index < data.paidBills.length - 1 ? 1 : 0,
+                            borderBottomColor: '#BBF7D0'
+                        }}>
+                            <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                                <Text style={{
+                                    fontSize: 16,
+                                    color: '#15803D',
+                                    fontFamily: 'AppFontBold',
+                                    textAlign: 'right'
+                                }}>
+                                    {bill.provider}
+                                </Text>
+                            </View>
+                            <View style={{ alignItems: 'flex-start', marginLeft: 16 }}>
+                                <Text style={{
+                                    fontSize: 16,
+                                    color: '#10B981',
+                                    fontFamily: 'AppFontBold'
+                                }}>
+                                    {formatAmount(bill.amount)}
+                                </Text>
+                            </View>
+                        </View>
+                    ))}
+                </View>
+            )}
 
             {/* Total Amount */}
             <View style={{
                 backgroundColor: '#10B981',
-                borderRadius: 16,
-                padding: 20,
-                marginBottom: 24
+                borderRadius: 12,
+                padding: 16
             }}>
                 <View style={{
                     flexDirection: 'row',
@@ -217,37 +238,17 @@ export default function TransactionSuccessCard({ data, onDismiss }: TransactionS
                         color: '#ffffff',
                         fontFamily: 'AppFontBold'
                     }}>
-                        المبلغ الإجمالي
+                        {isTransfer ? "المبلغ المحول" : "المبلغ الإجمالي"}
                     </Text>
                     <Text style={{
                         fontSize: 24,
                         color: '#ffffff',
                         fontFamily: 'AppFontBold'
                     }}>
-                        {formatAmount(data.totalAmount)}
+                        {formatAmount(amount)}
                     </Text>
                 </View>
             </View>
-
-            {/* Done Button */}
-            <Pressable
-                onPress={onDismiss}
-                style={{
-                    backgroundColor: '#3B82F6',
-                    borderRadius: 16,
-                    paddingVertical: 16,
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                }}
-            >
-                <Text style={{
-                    fontSize: 18,
-                    color: '#ffffff',
-                    fontFamily: 'AppFontBold'
-                }}>
-                    تم
-                </Text>
-            </Pressable>
-        </View>
+        </Pressable>
     )
 }

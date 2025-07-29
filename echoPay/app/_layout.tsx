@@ -6,6 +6,8 @@ import {
     Beiruti_700Bold,
     useFonts,
 } from "@expo-google-fonts/beiruti"
+import { TransactionProvider } from "../context/TransactionContext"
+import { AccountProvider } from "../context/AccountContext"
 
 export default function RootLayout() {
     /* -------- Fonts -------- */
@@ -19,19 +21,21 @@ export default function RootLayout() {
     }
 
     return (
-        <>
-            <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen 
-                    name="assistant" 
-                    options={{ 
-                        headerShown: false,
-                        presentation: 'fullScreenModal',
-                        animation: 'slide_from_bottom'
-                    }} 
-                />
-            </Stack>
-            <StatusBar style="dark" />
-        </>
+        <AccountProvider>
+            <TransactionProvider>
+                <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                    <Stack.Screen 
+                        name="assistant" 
+                        options={{ 
+                            headerShown: false,
+                            presentation: 'fullScreenModal',
+                            animation: 'slide_from_bottom'
+                        }} 
+                    />
+                </Stack>
+                <StatusBar style="dark" />
+            </TransactionProvider>
+        </AccountProvider>
     )
 }

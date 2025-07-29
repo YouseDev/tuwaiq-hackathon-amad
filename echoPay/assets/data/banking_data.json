@@ -8,13 +8,13 @@
     },
     "accounts": {
         "checking": {
-            "accountNumber": "SA44 2000 0001 2345 6789 1234",
+            "accountNumber": "1234",
             "balance": 5263,
             "currency": "SAR",
             "type": "جاري"
         },
         "savings": {
-            "accountNumber": "SA44 2000 0001 2345 6789 5678",
+            "accountNumber": "5678",
             "balance": 12851,
             "currency": "SAR",
             "type": "توفير"
@@ -390,13 +390,13 @@
     "creditCards": [
         {
             "id": "card_001",
-            "cardNumber": "4532 **** **** 1234",
-            "cardType": "البطاقة الائتمانية البلاتينية",
-            "cardTypeEn": "Platinum Credit Card",
+            "cardNumber": "1234",
+            "cardType": "مدى",
+            "cardTypeEn": "mada",
             "status": "نشطة",
-            "creditLimit": 15000.0,
-            "availableCredit": 12450.0,
-            "usedCredit": 2550.0,
+            "creditLimit": null,
+            "availableCredit": 5263.0,
+            "usedCredit": 0,
             "currency": "SAR",
             "issueDate": "2023-03-15",
             "expiryDate": "2027-03-31",
@@ -420,9 +420,9 @@
         },
         {
             "id": "card_002",
-            "cardNumber": "5431 **** **** 5678",
-            "cardType": "الإنماء الفرسان البلاتينية",
-            "cardTypeEn": "Alinma Al-Farsan Platinum",
+            "cardNumber": "5678",
+            "cardType": "Visa",
+            "cardTypeEn": "Visa",
             "status": "نشطة",
             "creditLimit": 8000.0,
             "availableCredit": 7320.0,
