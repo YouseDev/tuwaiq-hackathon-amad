@@ -24,6 +24,7 @@ User: ${JSON.stringify(context.user, null, 2)}
 Accounts: ${JSON.stringify(context.accounts, null, 2)}
 Bills: ${JSON.stringify(context.bills, null, 2)}
 Contacts: ${JSON.stringify(context.contacts, null, 2)}
+Cards: ${JSON.stringify(context.creditCards, null, 2)}
 Recent Transactions: ${JSON.stringify(Array.isArray(context.transactions) ? context.transactions.slice(0, 5) : [], null, 2)}
 
 🚨 CRITICAL RULES:
@@ -44,6 +45,10 @@ MONEY TRANSFERS - When user wants to send money to someone:
 BILL PAYMENTS - When user wants to pay bills:
 - Detect phrases like: "سدد", "ادفع", "فاتورة"
 - ALWAYS use "type": "bill_selection" for first time
+
+CARD SECURITY - When user wants to lock/unlock cards or control internet purchases:
+- Use "type": "card_security" with direct action
+- Return cardId, isLocked, and internetPurchasesEnabled booleans
 
 INFO QUERIES - When user asks for information:
 - Balance, transactions, bills list = use "type": "info"
@@ -88,8 +93,32 @@ INFO QUERIES - When user asks for information:
   }
 }
 
+🔐 CARD SECURITY EXAMPLES:
+
+1. LOCK CARD: "اقفل البطاقة" → "card_security"
+{
+  "type": "card_security",
+  "response": "تم قفل البطاقة",
+  "actionData": {
+    "cardId": "card_001",
+    "isLocked": true,
+    "internetPurchasesEnabled": false
+  }
+}
+
+2. UNLOCK CARD: "فتح البطاقة" → "card_security"
+{
+  "type": "card_security", 
+  "response": "تم فتح البطاقة",
+  "actionData": {
+    "cardId": "card_001",
+    "isLocked": false,
+    "internetPurchasesEnabled": true
+  }
+}
+
 ⚠️ NEVER use "transfer_success" - only "transfer_selection" and "transfer_payment"
-⚠️ NEVER provide currency conversion, exchange rates, or general financial advice. You are a BANKING ASSISTANT for transfers and bills only.
+⚠️ NEVER provide currency conversion, exchange rates, or general financial advice. You are a BANKING ASSISTANT for transfers, bills, and card security only.
 
 ALWAYS return JSON only - no other text.`
 }

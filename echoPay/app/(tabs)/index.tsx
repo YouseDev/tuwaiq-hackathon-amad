@@ -11,7 +11,6 @@ import bankingData from "../../assets/data/banking_data.json"
 export default function AccountsScreen() {
     /* -------- Dynamic account data -------- */
     const { accounts: userAccount } = useAccounts()
-    const [userCards] = useState(bankingData.creditCards)
 
     /* -------- UI -------- */
     return (
@@ -36,7 +35,7 @@ export default function AccountsScreen() {
 
                 {/* Sections */}
                 <BalanceSection userAccount={userAccount} />
-                <CreditCardSection userCards={userCards} />
+                <CreditCardSection />
             </ScrollView>
 
             {/* Voice Assistant FAB */}

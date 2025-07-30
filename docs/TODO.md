@@ -12,10 +12,10 @@
 -   [x] Implement paying the bills
 -   [x] Move smart LLM to anthropic sonnet 4
 -   [x] Implement transfering funds
--   [ ] Implement card lock/unlock for security
--   [ ] Brain storm how to implement bank/ads questions
+-   [x] Implement card lock/unlock for security
 -   [x] Polish the UI
 -   [x] Improve ai visualization while listening to the user
+-   [ ] Brain storm how to implement bank/ads questions
 -   [ ] Research openning the voice feature using phone side buttons for accessibility
 -   [ ] Research multi-language support (English, Hindi, Pakistan etc)
 -   [ ] Brain storm how can we implement fraud detection and prevention

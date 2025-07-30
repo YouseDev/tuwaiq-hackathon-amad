@@ -404,6 +404,8 @@
             "minimumPayment": 127.5,
             "currentBalance": 2550.0,
             "loyaltyProgram": "برنامج الولاء أكثر",
+            "isLocked": false,
+            "internetPurchasesEnabled": true,
             "benefits": [
                 "بدون رسوم سنوية",
                 "اكسب نقاط عبر برنامج الولاء أكثر",
@@ -435,6 +437,8 @@
             "currentBalance": 680.0,
             "loyaltyProgram": "أميال الفرسان",
             "milesBalance": 8450,
+            "isLocked": false,
+            "internetPurchasesEnabled": true,
             "benefits": [
                 "10,000 ميل ترحيبي",
                 "1 ميل دوليًا مقابل كل 3 ريال",

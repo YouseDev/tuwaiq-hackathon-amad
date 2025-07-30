@@ -8,6 +8,7 @@ import {
 } from "@expo-google-fonts/beiruti"
 import { TransactionProvider } from "../context/TransactionContext"
 import { AccountProvider } from "../context/AccountContext"
+import { CardProvider } from "../context/CardContext"
 
 export default function RootLayout() {
     /* -------- Fonts -------- */
@@ -23,18 +24,20 @@ export default function RootLayout() {
     return (
         <AccountProvider>
             <TransactionProvider>
-                <Stack screenOptions={{ headerShown: false }}>
-                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                    <Stack.Screen 
-                        name="assistant" 
-                        options={{ 
-                            headerShown: false,
-                            presentation: 'fullScreenModal',
-                            animation: 'slide_from_bottom'
-                        }} 
-                    />
-                </Stack>
-                <StatusBar style="dark" />
+                <CardProvider>
+                    <Stack screenOptions={{ headerShown: false }}>
+                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                        <Stack.Screen 
+                            name="assistant" 
+                            options={{ 
+                                headerShown: false,
+                                presentation: 'fullScreenModal',
+                                animation: 'slide_from_bottom'
+                            }} 
+                        />
+                    </Stack>
+                    <StatusBar style="dark" />
+                </CardProvider>
             </TransactionProvider>
         </AccountProvider>
     )

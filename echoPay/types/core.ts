@@ -1,7 +1,24 @@
+export interface CreditCard {
+    id: string
+    cardNumber: string
+    cardType: string
+    cardTypeEn: string
+    status: string
+    creditLimit: number | null
+    availableCredit: number
+    usedCredit: number
+    currency: string
+    issueDate: string
+    expiryDate: string
+    isLocked: boolean
+    internetPurchasesEnabled: boolean
+    [key: string]: any
+}
+
 export interface BankingContext {
     user: any
     accounts: any
-    creditCards: any[]
+    creditCards: CreditCard[]
     transactions: any[]
     bills: any[]
     contacts: any[]
@@ -62,6 +79,12 @@ export interface TransferData {
     amount: number
     source_account: "checking" | "savings"
     requires_otp: boolean
+}
+
+export interface CardSecurityData {
+    cardId: string
+    isLocked: boolean
+    internetPurchasesEnabled: boolean
 }
 
 export type ChatMessage = {

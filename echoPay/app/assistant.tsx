@@ -36,6 +36,7 @@ import {
     BillPaymentData,
     TransferSelectionData,
     TransferData,
+    CardSecurityData,
 } from "../types/core"
 import { createAudioPlayer } from "expo-audio"
 import BillSelectionCard from "../components/BillSelectionCard"
@@ -44,6 +45,7 @@ import TransactionSuccessCard from "../components/TransactionSuccessCard"
 import VoiceOrb from "../components/VoiceOrb"
 import { useTransactions } from "../context/TransactionContext"
 import { useAccounts } from "../context/AccountContext"
+import { useCards } from "../context/CardContext"
 
 const { width, height } = Dimensions.get("window")
 
@@ -55,6 +57,7 @@ export default function VoiceAssistantScreen() {
     const { transactions: currentTransactions, addTransactions } =
         useTransactions()
     const { deductFromAccount } = useAccounts()
+    const { cards, updateCardSecurity } = useCards()
 
     // Voice interaction state
     const [voiceState, setVoiceState] = useState<VoiceState>("idle")
@@ -79,6 +82,9 @@ export default function VoiceAssistantScreen() {
     // Transaction success state
     const [showTransactionSuccess, setShowTransactionSuccess] = useState(false)
     const [transactionData, setTransactionData] = useState<any>(null)
+    
+    // Audio player reference for filler audio
+    const fillerPlayerRef = useRef<any>(null)
 
     // Animation values
     const fadeAnim = useRef(new Animated.Value(0)).current
@@ -148,6 +154,7 @@ export default function VoiceAssistantScreen() {
                     role: "system",
                     content: tools.buildPrompt({
                         ...bankingData,
+                        creditCards: cards,
                         transactions: currentTransactions,
                         bills: currentBills,
                     } as unknown as BankingContext),
@@ -292,6 +299,7 @@ export default function VoiceAssistantScreen() {
                 Haptics.notificationAsync(
                     Haptics.NotificationFeedbackType.Success,
                 )
+                stopFillerAudio()
                 await TTSService.speak(smartResult.response)
                 // Keep the response on screen - don't auto-reset to idle
             } else if (smartResult.type === "transfer_selection") {
@@ -305,6 +313,7 @@ export default function VoiceAssistantScreen() {
                 Haptics.notificationAsync(
                     Haptics.NotificationFeedbackType.Success,
                 )
+                stopFillerAudio()
                 await TTSService.speak(smartResult.response)
                 // Keep the response on screen - don't auto-reset to idle
             } else if (smartResult.type === "transfer_payment") {
@@ -318,6 +327,7 @@ export default function VoiceAssistantScreen() {
                     setTransferSelectionData(null)
                     setPendingTransfer(false)
                     setVoiceState("speaking")
+                    stopFillerAudio()
                     await TTSService.speak("تم إلغاء التحويل")
                 }
             } else if (smartResult.type === "transfer_success") {
@@ -347,9 +357,24 @@ export default function VoiceAssistantScreen() {
                     setBillSelectionData(null)
                     setPendingBillPayment(false)
                     setVoiceState("speaking")
+                    stopFillerAudio()
                     await TTSService.speak(smartResult.response)
                     // Keep on speaking state
                 }
+            } else if (smartResult.type === "card_security") {
+                // Handle card security operations
+                const securityData = smartResult.actionData as CardSecurityData
+                updateCardSecurity(securityData.cardId, securityData.isLocked, securityData.internetPurchasesEnabled)
+                
+                setVoiceState("speaking")
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+                
+                stopFillerAudio()
+                setTimeout(() => {
+                    setAiResponse(smartResult.response)
+                }, 300)
+                
+                await TTSService.speak(smartResult.response)
             } else {
                 // Regular response handling
                 setVoiceState("speaking")
@@ -357,6 +382,7 @@ export default function VoiceAssistantScreen() {
                     Haptics.NotificationFeedbackType.Success,
                 )
 
+                stopFillerAudio()
                 // Small delay to let TTS start before showing text
                 setTimeout(() => {
                     setAiResponse(smartResult.response)
@@ -368,6 +394,7 @@ export default function VoiceAssistantScreen() {
             }
         } catch (error) {
             console.error("Voice command error:", error)
+            stopFillerAudio()
             await TTSService.speak("عذراً، حدث خطأ في معالجة طلبك")
             // Keep on speaking state to show error message
         }
@@ -433,6 +460,7 @@ export default function VoiceAssistantScreen() {
 
                     const updatedContext = {
                         ...bankingData,
+                        creditCards: cards,
                         transactions: [
                             ...newTransactions,
                             ...currentTransactions,
@@ -460,17 +488,20 @@ export default function VoiceAssistantScreen() {
 
                 setShowTransactionSuccess(true)
                 setVoiceState("speaking")
+                stopFillerAudio()
                 await TTSService.speak(result.message)
                 // Keep on speaking state to show transaction success
             } else {
                 setAiResponse(result.message)
                 setVoiceState("speaking")
+                stopFillerAudio()
                 await TTSService.speak(result.message)
             }
         } catch (error) {
             console.error("Payment error:", error)
             setAiResponse("حدث خطأ في معالجة الدفع")
             setVoiceState("speaking")
+            stopFillerAudio()
             await TTSService.speak("حدث خطأ في معالجة الدفع")
         }
     }
@@ -532,17 +563,20 @@ export default function VoiceAssistantScreen() {
 
                 setShowTransactionSuccess(true)
                 setVoiceState("speaking")
+                stopFillerAudio()
                 await TTSService.speak(result.message)
                 // Keep on speaking state to show transaction success
             } else {
                 setAiResponse(result.message)
                 setVoiceState("speaking")
+                stopFillerAudio()
                 await TTSService.speak(result.message)
             }
         } catch (error) {
             console.error("Transfer error:", error)
             setAiResponse("حدث خطأ في معالجة التحويل")
             setVoiceState("speaking")
+            stopFillerAudio()
             await TTSService.speak("حدث خطأ في معالجة التحويل")
         }
     }
@@ -571,12 +605,32 @@ export default function VoiceAssistantScreen() {
             tools.AUDIO_FILES[fillerKey as keyof typeof tools.AUDIO_FILES]
         if (!audioFiles || audioFiles.length === 0) return
 
+        // Stop any existing filler audio
+        if (fillerPlayerRef.current) {
+            fillerPlayerRef.current.remove()
+            fillerPlayerRef.current = null
+        }
+
         const player = createAudioPlayer(audioFiles[0])
+        fillerPlayerRef.current = player
         player.volume = 1.0
         player.play()
         player.addListener("playbackStatusUpdate", (s) => {
-            if (s.isLoaded && s.didJustFinish) player.remove()
+            if (s.isLoaded && s.didJustFinish) {
+                player.remove()
+                if (fillerPlayerRef.current === player) {
+                    fillerPlayerRef.current = null
+                }
+            }
         })
+    }
+    
+    const stopFillerAudio = () => {
+        if (fillerPlayerRef.current) {
+            console.log("🔇 Stopping filler audio")
+            fillerPlayerRef.current.remove()
+            fillerPlayerRef.current = null
+        }
     }
 
     const handleMicPress = () => {

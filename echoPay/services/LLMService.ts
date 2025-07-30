@@ -1,10 +1,10 @@
-import { ChatMessage, BillSelectionData, BillPaymentData, TransferSelectionData, TransferData } from "../types/core"
+import { ChatMessage, BillSelectionData, BillPaymentData, TransferSelectionData, TransferData, CardSecurityData } from "../types/core"
 
 interface SmartLLMResponse {
-    type: "info" | "action" | "ignore" | "bill_selection" | "bill_payment" | "transfer_selection" | "transfer_payment" | "transfer_success"
+    type: "info" | "action" | "ignore" | "bill_selection" | "bill_payment" | "transfer_selection" | "transfer_payment" | "transfer_success" | "card_security"
     response: string
     needsOTP?: boolean
-    actionData?: any | BillSelectionData | BillPaymentData | TransferSelectionData | TransferData
+    actionData?: any | BillSelectionData | BillPaymentData | TransferSelectionData | TransferData | CardSecurityData
 }
 
 class SmartLLMService {
