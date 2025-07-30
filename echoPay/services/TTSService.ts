@@ -51,7 +51,7 @@ class TTSService {
     async speak(text: string) {
         try {
             const startTime = Date.now()
-            console.log("🗣️ TTS start:", text.slice(0, 50) + "...")
+            console.log("🗣️ TTS start:", text)
             await this.stop()
 
             if (!this.audioConfigured) await this.configureAudioSession()

@@ -9,6 +9,7 @@ import {
 import { TransactionProvider } from "../context/TransactionContext"
 import { AccountProvider } from "../context/AccountContext"
 import { CardProvider } from "../context/CardContext"
+import { VoiceProvider } from "../context/VoiceContext"
 
 export default function RootLayout() {
     /* -------- Fonts -------- */
@@ -25,18 +26,20 @@ export default function RootLayout() {
         <AccountProvider>
             <TransactionProvider>
                 <CardProvider>
-                    <Stack screenOptions={{ headerShown: false }}>
-                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                        <Stack.Screen 
-                            name="assistant" 
-                            options={{ 
-                                headerShown: false,
-                                presentation: 'fullScreenModal',
-                                animation: 'slide_from_bottom'
-                            }} 
-                        />
-                    </Stack>
-                    <StatusBar style="dark" />
+                    <VoiceProvider>
+                        <Stack screenOptions={{ headerShown: false }}>
+                            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                            <Stack.Screen 
+                                name="assistant" 
+                                options={{ 
+                                    headerShown: false,
+                                    presentation: 'fullScreenModal',
+                                    animation: 'slide_from_bottom'
+                                }} 
+                            />
+                        </Stack>
+                        <StatusBar style="dark" />
+                    </VoiceProvider>
                 </CardProvider>
             </TransactionProvider>
         </AccountProvider>

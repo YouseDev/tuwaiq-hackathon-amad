@@ -20,6 +20,17 @@ export default function BillSelectionCard({ data, onConfirm, onCancel }: BillSel
         return date.toLocaleDateString('ar-SA')
     }
 
+    // Add safety checks for data
+    if (!data) {
+        console.error("❌ BillSelectionCard: data is undefined")
+        return null
+    }
+
+    if (!data.matched_bills || !Array.isArray(data.matched_bills)) {
+        console.error("❌ BillSelectionCard: matched_bills is undefined or not an array", data)
+        return null
+    }
+
     return (
         <View style={{
             backgroundColor: '#ffffff',
@@ -98,51 +109,7 @@ export default function BillSelectionCard({ data, onConfirm, onCancel }: BillSel
                 </View>
             </View>
 
-            {/* Compact Action Buttons */}
-            <View style={{
-                flexDirection: 'row',
-                gap: 8
-            }}>
-                <Pressable
-                    onPress={onCancel}
-                    style={{
-                        flex: 1,
-                        backgroundColor: '#F3F4F6',
-                        borderRadius: 8,
-                        paddingVertical: 10,
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}
-                >
-                    <Text style={{
-                        fontSize: 16,
-                        color: '#6B7280',
-                        fontFamily: 'AppFontBold'
-                    }}>
-                        إلغاء
-                    </Text>
-                </Pressable>
-
-                <Pressable
-                    onPress={onConfirm}
-                    style={{
-                        flex: 1,
-                        backgroundColor: '#3B82F6',
-                        borderRadius: 8,
-                        paddingVertical: 10,
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}
-                >
-                    <Text style={{
-                        fontSize: 16,
-                        color: '#ffffff',
-                        fontFamily: 'AppFontBold'
-                    }}>
-                        تأكيد
-                    </Text>
-                </Pressable>
-            </View>
+            {/* Voice-only app - no buttons needed */}
         </View>
     )
 }

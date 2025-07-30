@@ -1,25 +1,33 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import {
     ExpoSpeechRecognitionModule,
     useSpeechRecognitionEvent,
 } from "expo-speech-recognition"
+import { useVoice } from "../context/VoiceContext"
 
 /**
- * Minimal STT Service for EchoPay
+ * Simple STT Service for EchoPay
  * --------------------------------
- * • Arabic speech‑to‑text (ar‑SA)
- * • Permission + availability checks
- * • No automatic retries / recovery
+ * • Arabic speech-to-text (ar-SA)
+ * • Uses VoiceContext for state management
+ * • Two-trigger processing system
  */
 const useSTTService = () => {
-    /* ------------- State ------------- */
+    // Context states
+    const {
+        isSTTProcessing,
+        setIsSTTProcessing,
+        setFinalText,
+        checkAndProcess,
+        resetVoiceSession,
+    } = useVoice()
+
+    // Local STT states (for UI feedback only)
     const [isListening, setIsListening] = useState(false)
     const [transcript, setTranscript] = useState("")
     const [confidence, setConfidence] = useState<number>(0)
     const [error, setError] = useState<string>("")
 
-    /* ------------- Refs ------------- */
-    const wantListening = useRef(false) // whether the caller still wants STT
     const continuous = true // keep session alive after silence
 
     /* ---------- Helpers ---------- */
@@ -27,7 +35,7 @@ const useSTTService = () => {
         try {
             return ExpoSpeechRecognitionModule.isRecognitionAvailable()
         } catch (err) {
-            console.error("❌ STT availability check failed:", err)
+            console.log("❌ STT availability check failed:", err)
             return false
         }
     }, [])
@@ -39,7 +47,7 @@ const useSTTService = () => {
             if (!granted) setError("Microphone permission denied")
             return granted
         } catch (err) {
-            console.error("❌ Permission request failed:", err)
+            console.log("❌ Permission request failed:", err)
             setError("Permission request failed")
             return false
         }
@@ -54,9 +62,10 @@ const useSTTService = () => {
                 continuous,
                 requiresOnDeviceRecognition: false,
             })
+            console.log("✅ STT engine started")
             return true
         } catch (err) {
-            console.error("❌ STT start failed:", err)
+            console.log("❌ STT start failed:", err)
             setError("Failed to start speech recognition")
             return false
         }
@@ -67,72 +76,129 @@ const useSTTService = () => {
             await ExpoSpeechRecognitionModule.stop()
             return true
         } catch (err) {
-            console.error("❌ STT stop failed:", err)
+            console.log("❌ STT stop failed:", err)
             return false
         }
     }, [])
 
     /* ---------- Public API ---------- */
     const startListening = useCallback(async () => {
+        console.log("🎯 STT: Starting listening session")
+
+        // Reset context and local states
+        resetVoiceSession()
         setError("")
         setTranscript("")
-        wantListening.current = true
+
+        // Mark STT as processing
+        setIsSTTProcessing(true)
 
         if (!(await checkAvailability())) {
             setError("Speech recognition not available")
+            setIsSTTProcessing(false)
             return false
         }
-        if (!(await requestPermissions())) return false
+        if (!(await requestPermissions())) {
+            setIsSTTProcessing(false)
+            return false
+        }
 
         return startEngine()
-    }, [checkAvailability, requestPermissions, startEngine])
+    }, [
+        checkAvailability,
+        requestPermissions,
+        startEngine,
+        resetVoiceSession,
+        setIsSTTProcessing,
+    ])
 
     const stopListening = useCallback(async () => {
-        wantListening.current = false
+        console.log("🎯 STT: Stopping listening session")
         await stopEngine()
         setIsListening(false)
+
+        // STT engine stopped, but we might still be waiting for final result
+        // Don't set isSTTProcessing = false here, let the result handler do it
     }, [stopEngine])
 
     /* ---------- Event Handlers ---------- */
     useSpeechRecognitionEvent("start", () => {
         setIsListening(true)
         setError("")
-        console.log("🎙️ STT started")
+        console.log("🎙️ STT engine started listening")
     })
 
     useSpeechRecognitionEvent("end", () => {
+        console.log("🔚 STT engine ended")
         setIsListening(false)
-        console.log("🔚 STT ended - confidence:", confidence)
-        // Auto‑restart only if user is still holding / requesting
-        if (continuous && wantListening.current) startEngine()
+
+        // Don't mark processing as done here - let button release handler control this
+        // This allows accumulation of multiple STT segments until button is released
+        console.log(
+            "⏳ STT engine ended, waiting for button release to complete processing",
+        )
     })
 
     useSpeechRecognitionEvent("result", (e) => {
         const text = e.results?.[0]?.transcript ?? ""
         const conf = e.results?.[0]?.confidence ?? 0
+        const isFinal = e.isFinal || false
 
-        // Only log when confidence > 0 to reduce noise
+        // Always update interim transcript for UI
+        setTranscript(text)
+        setConfidence(conf)
+
         if (conf > 0) {
             console.log(
-                "🎙️ STT:",
+                `🎙️ STT ${isFinal ? "(FINAL)" : "(interim)"}:`,
                 text.slice(0, 30) + (text.length > 30 ? "..." : ""),
             )
         }
 
-        setTranscript(text)
-        setConfidence(conf)
+        if (isFinal && text.trim()) {
+            console.log(
+                "🎯 STT: Got final segment, accumulating:",
+                text.slice(0, 30),
+            )
+
+            // Accumulate text instead of replacing (for continuous speech)
+            setFinalText((prev) => {
+                const accumulated = ((prev || "") + " " + text).trim()
+                console.log(
+                    "📝 Accumulated text:",
+                    accumulated.slice(0, 50) + "...",
+                )
+                return accumulated
+            })
+
+            // Don't mark STT processing as done yet - wait for button release
+            // The button release handler will call checkAndProcess()
+            console.log(
+                "⏳ STT segment complete, waiting for button release...",
+            )
+        }
     })
 
     useSpeechRecognitionEvent("error", (e: any) => {
-        console.error("⚠️ STT error:", e)
+        console.log("⚠️ STT error:", e)
         setError(`Speech recognition error: ${e.message || e.code}`)
-        stopListening() // no recovery ‑ just stop
+        setIsListening(false)
+
+        // Only mark processing as done for actual errors, not no-speech
+        if (e.error !== "no-speech") {
+            console.log("🚫 STT error - marking processing complete")
+            setIsSTTProcessing(false)
+        } else {
+            console.log(
+                "🤫 No speech detected - waiting for button release to complete",
+            )
+        }
     })
 
     /* ---------- Cleanup ---------- */
     useEffect(() => {
         return () => {
-            void stopListening() // <- fire‑and‑forget, returns undefined (void)
+            void stopListening()
         }
     }, [stopListening])
 
@@ -140,13 +206,15 @@ const useSTTService = () => {
         // Controls
         startListening,
         stopListening,
-        // State
+        // Local UI states
         isListening,
         transcript,
         confidence,
         error,
         hasError: !!error,
         isActive: isListening,
+        // Context states (for debugging)
+        isSTTProcessing,
     }
 }
 

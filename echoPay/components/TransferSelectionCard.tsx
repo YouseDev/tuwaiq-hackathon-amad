@@ -31,17 +31,41 @@ const TransferSelectionCard: React.FC<TransferSelectionCardProps> = ({
             shadowRadius: 4,
             elevation: 3,
         }}>
-            {/* Compact Transfer Info */}
-            <View style={{ marginBottom: 8 }}>
+            {/* Header */}
+            <View style={{ marginBottom: 20, paddingTop: 8 }}>
+                <Text style={{
+                    fontSize: 28,
+                    color: '#000000',
+                    fontFamily: 'AppFontBold',
+                    textAlign: 'center'
+                }}>
+                    تأكيد التحويل
+                </Text>
+            </View>
+
+            {/* Transfer Info - Target on right, Amount on left */}
+            <View style={{ marginBottom: 20 }}>
                 <View style={{
                     flexDirection: 'row',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    paddingVertical: 6,
+                    paddingVertical: 12,
                 }}>
-                    <View style={{ flex: 1, paddingRight: 12 }}>
+                    {/* Amount on left */}
+                    <View style={{ alignItems: 'flex-start' }}>
                         <Text style={{
-                            fontSize: 16,
+                            fontSize: 24,
+                            color: '#DC2626',
+                            fontFamily: 'AppFontBold'
+                        }}>
+                            {formatAmount(transferData.amount)}
+                        </Text>
+                    </View>
+                    
+                    {/* Target on right */}
+                    <View style={{ flex: 1, paddingLeft: 12, alignItems: 'flex-end' }}>
+                        <Text style={{
+                            fontSize: 20,
                             color: '#000000',
                             fontFamily: 'AppFontBold',
                             textAlign: 'right'
@@ -49,87 +73,33 @@ const TransferSelectionCard: React.FC<TransferSelectionCardProps> = ({
                             {transferData.recipient.name}
                         </Text>
                         <Text style={{
-                            fontSize: 12,
+                            fontSize: 16,
                             color: '#6B7280',
                             fontFamily: 'AppFontRegular',
-                            textAlign: 'right'
+                            textAlign: 'right',
+                            marginTop: 4
                         }}>
                             {transferData.recipient.relationship}
-                        </Text>
-                    </View>
-                    <View style={{ alignItems: 'flex-start' }}>
-                        <Text style={{
-                            fontSize: 16,
-                            color: '#DC2626',
-                            fontFamily: 'AppFontBold'
-                        }}>
-                            {formatAmount(transferData.amount)}
                         </Text>
                     </View>
                 </View>
             </View>
 
-            {/* Compact Account Info */}
+            {/* Account Info - Show "حساب جاري" */}
             <View style={{
                 backgroundColor: '#F8F9FA',
                 borderRadius: 8,
-                padding: 10,
+                padding: 16,
                 marginBottom: 8
             }}>
                 <Text style={{
-                    fontSize: 14,
-                    color: '#6B7280',
+                    fontSize: 18,
+                    color: '#374151',
                     fontFamily: 'AppFontRegular',
                     textAlign: 'center'
                 }}>
-                    من {transferData.sourceAccountDisplay}
+                    من حساب جاري
                 </Text>
-            </View>
-
-            {/* Compact Action Buttons */}
-            <View style={{
-                flexDirection: 'row',
-                gap: 8
-            }}>
-                <Pressable
-                    onPress={onCancel}
-                    style={{
-                        flex: 1,
-                        backgroundColor: '#F3F4F6',
-                        borderRadius: 8,
-                        paddingVertical: 10,
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}
-                >
-                    <Text style={{
-                        fontSize: 16,
-                        color: '#6B7280',
-                        fontFamily: 'AppFontBold'
-                    }}>
-                        إلغاء
-                    </Text>
-                </Pressable>
-
-                <Pressable
-                    onPress={onConfirm}
-                    style={{
-                        flex: 1,
-                        backgroundColor: '#3B82F6',
-                        borderRadius: 8,
-                        paddingVertical: 10,
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}
-                >
-                    <Text style={{
-                        fontSize: 16,
-                        color: '#ffffff',
-                        fontFamily: 'AppFontBold'
-                    }}>
-                        تأكيد
-                    </Text>
-                </Pressable>
             </View>
         </View>
     )
