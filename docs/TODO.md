@@ -15,8 +15,7 @@
 -   [x] Implement card lock/unlock for security
 -   [x] Polish the UI
 -   [x] Improve ai visualization while listening to the user
--   [ ] Setup more specific filler audio for core feature
--   [ ] Add header conformation for bill conformation card
+-   [ ] Setup more specific filler audio for core feature and improve fastLLM categorization
 
 # FUTURE THINGS TO DO
 

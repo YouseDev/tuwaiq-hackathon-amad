@@ -10,7 +10,7 @@ import Animated, {
 } from 'react-native-reanimated'
 
 interface VoiceOrbProps {
-    mode: 'listening' | 'speaking' | 'idle'
+    mode: 'listening' | 'speaking' | 'idle' | 'processing' | 'transcribing'
     size?: number
     color?: string
 }

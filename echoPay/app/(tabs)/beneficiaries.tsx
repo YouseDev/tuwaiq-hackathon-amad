@@ -1,8 +1,7 @@
 import React, { useState } from "react"
-import { ScrollView, View, Text, Pressable } from "react-native"
-import { Feather } from "@expo/vector-icons"
-import { router } from "expo-router"
+import { ScrollView, View, Text } from "react-native"
 import ContactsSection from "../../components/ContactsSection"
+import VoiceButton from "../../components/VoiceButton"
 import bankingData from "../../assets/data/banking_data.json"
 
 export default function BeneficiariesScreen() {
@@ -108,27 +107,7 @@ export default function BeneficiariesScreen() {
             </ScrollView>
 
             {/* Voice Assistant FAB */}
-            <Pressable
-                onPress={() => router.push("/assistant")}
-                style={{
-                    position: "absolute",
-                    bottom: 30,
-                    right: 30,
-                    width: 60,
-                    height: 60,
-                    borderRadius: 30,
-                    backgroundColor: "#1F2937",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    shadowColor: "#000000",
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 8,
-                    elevation: 8,
-                }}
-            >
-                <Feather name="mic" size={24} color="#fff" />
-            </Pressable>
+            <VoiceButton />
         </View>
     )
 }

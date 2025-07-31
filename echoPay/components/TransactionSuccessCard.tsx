@@ -189,13 +189,13 @@ export default function TransactionSuccessCard({ data, onDismiss }: TransactionS
                         الفواتير المدفوعة
                     </Text>
                     
-                    {data.paidBills.map((bill, index) => (
+                    {data.paidBills?.map((bill, index) => (
                         <View key={bill.id} style={{
                             flexDirection: 'row',
                             justifyContent: 'space-between',
                             alignItems: 'center',
                             paddingVertical: 8,
-                            borderBottomWidth: index < data.paidBills.length - 1 ? 1 : 0,
+                            borderBottomWidth: index < (data.paidBills?.length || 0) - 1 ? 1 : 0,
                             borderBottomColor: '#BBF7D0'
                         }}>
                             <View style={{ flex: 1, alignItems: 'flex-end' }}>

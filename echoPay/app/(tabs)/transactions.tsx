@@ -1,6 +1,7 @@
 import React from "react"
 import { ScrollView, View, Text } from "react-native"
 import TransactionSection from "../../components/TransactionSection"
+import VoiceButton from "../../components/VoiceButton"
 import { useTransactions } from "../../context/TransactionContext"
 
 export default function TransactionsScreen() {
@@ -41,6 +42,9 @@ export default function TransactionsScreen() {
                     <TransactionSection userTransactions={userTransactions} />
                 </View>
             </ScrollView>
+
+            {/* Voice Assistant FAB */}
+            <VoiceButton />
         </View>
     )
 }

@@ -53,7 +53,12 @@ import { useLLMContext } from "../hooks/useLLMContext"
 const { width, height } = Dimensions.get("window")
 
 // Voice states for visual feedback
-type VoiceState = "idle" | "listening" | "transcribing" | "processing" | "speaking"
+type VoiceState =
+    | "idle"
+    | "listening"
+    | "transcribing"
+    | "processing"
+    | "speaking"
 
 export default function VoiceAssistantScreen() {
     // Context hooks
@@ -62,7 +67,7 @@ export default function VoiceAssistantScreen() {
     const { deductFromAccount } = useAccounts()
     const { cards, updateCardSecurity } = useCards()
     const { bills: currentBills, updateBillsStatus } = useBills()
-    
+
     // Centralized LLM context that automatically updates
     const llmContext = useLLMContext()
 
@@ -78,7 +83,7 @@ export default function VoiceAssistantScreen() {
     const [billSelectionData, setBillSelectionData] =
         useState<BillSelectionData | null>(null)
     const [pendingBillPayment, setPendingBillPayment] = useState(false)
-    
+
     // Transfer state
     const [showTransferSelection, setShowTransferSelection] = useState(false)
     const [transferSelectionData, setTransferSelectionData] =
@@ -88,7 +93,7 @@ export default function VoiceAssistantScreen() {
     // Transaction success state
     const [showTransactionSuccess, setShowTransactionSuccess] = useState(false)
     const [transactionData, setTransactionData] = useState<any>(null)
-    
+
     // Audio player reference for filler audio
     const fillerPlayerRef = useRef<any>(null)
 
@@ -147,9 +152,9 @@ export default function VoiceAssistantScreen() {
         setIsButtonHeld,
         setIsSTTProcessing,
         checkAndProcess,
-        setOnProcessCommand
+        setOnProcessCommand,
     } = useVoice()
-    
+
     // Voice services (simplified)
     const {
         startListening,
@@ -158,7 +163,7 @@ export default function VoiceAssistantScreen() {
         transcript,
         confidence,
         error,
-        hasError
+        hasError,
     } = useSTTService()
 
     // Chat history for context - initialize with current bills
@@ -167,7 +172,7 @@ export default function VoiceAssistantScreen() {
     // Button state validation to prevent false release events
     const buttonIntentHeld = useRef(false)
     const buttonPressStartTime = useRef(0)
-    
+
     // Set up command processor
     useEffect(() => {
         setOnProcessCommand((command: string) => {
@@ -181,7 +186,7 @@ export default function VoiceAssistantScreen() {
             role: "system" as const,
             content: tools.buildPrompt(llmContext),
         }
-        
+
         if (historyRef.current.length === 0) {
             // Initialize with system message
             historyRef.current = [systemMessage]
@@ -192,6 +197,28 @@ export default function VoiceAssistantScreen() {
             console.log("🔄 LLM context updated automatically")
         }
     }, [llmContext])
+
+    // Audio cleanup on screen mount/unmount
+    useEffect(() => {
+        console.log("🎵 Voice assistant screen mounted")
+
+        // Cleanup function when screen unmounts
+        return () => {
+            console.log(
+                "🧹 Voice assistant screen unmounting - cleaning up audio",
+            )
+            // Stop all audio immediately
+            TTSService.stop()
+            stopFillerAudio()
+
+            // Reset TTS service state
+            TTSService.reset().catch((err) =>
+                console.error("❌ Error resetting TTS service:", err),
+            )
+
+            console.log("✅ Audio cleanup completed")
+        }
+    }, [])
 
     // Command processing
     const processedCommandRef = useRef<string>("")
@@ -233,14 +260,23 @@ export default function VoiceAssistantScreen() {
             voiceState,
             busy,
         })
-    }, [isButtonHeld, isSTTProcessing, isListening, finalText, voiceState, busy])
-    
+    }, [
+        isButtonHeld,
+        isSTTProcessing,
+        isListening,
+        finalText,
+        voiceState,
+        busy,
+    ])
+
     // Trigger processing when states change to the right values
     useEffect(() => {
         if (!isButtonHeld && !isSTTProcessing && finalText.trim() && !busy) {
             // Check if this is the same command we just processed
             if (finalText !== processedCommandRef.current) {
-                console.log("🔄 State changed to processing conditions - triggering checkAndProcess")
+                console.log(
+                    "🔄 State changed to processing conditions - triggering checkAndProcess",
+                )
                 checkAndProcess()
             } else {
                 console.log("🚫 Skipping duplicate command processing")
@@ -250,9 +286,16 @@ export default function VoiceAssistantScreen() {
 
     // Handle visual state transitions - show transcribing when waiting for final result
     useEffect(() => {
-        if (!isListening && isSTTProcessing && voiceState === "listening" && transcript) {
+        if (
+            !isListening &&
+            isSTTProcessing &&
+            voiceState === "listening" &&
+            transcript
+        ) {
             // STT stopped listening but still processing, have interim text
-            console.log("🔄 STT processing final result - showing transcribing state")
+            console.log(
+                "🔄 STT processing final result - showing transcribing state",
+            )
             setVoiceState("transcribing")
             setProcessingMessage("جاري فهم الكلام...")
         }
@@ -299,47 +342,110 @@ export default function VoiceAssistantScreen() {
             }
 
             // Wait for smart LLM (should complete while filler is playing)
-            const smartResult = await smartLLMPromise
+            console.log("⏳ Awaiting SmartLLM response...")
+            console.log(
+                "🔍 Promise state check - about to await smartLLMPromise",
+            )
+
+            let smartResult
+            try {
+                console.log("⚡ Starting smartLLMPromise resolution...")
+                smartResult = await smartLLMPromise
+                console.log("✅ SmartLLM promise resolved successfully")
+            } catch (llmError) {
+                console.error("🚨 CRITICAL: SmartLLM promise rejected:", llmError)
+                throw llmError
+            }
+
             const totalDuration = Date.now() - startTime
             console.log(`🧠 SmartLLM completed in ${totalDuration}ms total`)
 
-            historyRef.current.push({
-                role: "assistant",
-                content: smartResult.response,
-            })
+            console.log("🔍 SmartLLM result:", JSON.stringify(smartResult, null, 2))
+
+            if (!smartResult) {
+                console.error("❌ SmartLLM returned null/undefined")
+                throw new Error("SmartLLM returned null/undefined result")
+            }
+
+            if (!smartResult.response) {
+                console.error(
+                    "❌ SmartLLM returned empty response:",
+                    smartResult,
+                )
+                throw new Error("SmartLLM returned empty response")
+            }
+
+            console.log("📝 Adding response to history...")
+            try {
+                historyRef.current.push({
+                    role: "assistant",
+                    content: smartResult.response,
+                })
+                console.log("✅ Response added to history successfully")
+            } catch (historyError) {
+                console.error("🚨 Error adding to history:", historyError)
+            }
 
             // Handle different response types
+            console.log("🔄 Processing response type:", smartResult.type)
+            console.log("🔄 About to enter response type handler...")
             if (smartResult.type === "bill_selection") {
-                // Show bill selection UI
-                const billData = smartResult.actionData as BillSelectionData
-                console.log("💰 Bill selection data received:", billData)
-                
-                // Fix LLM response format - convert bills to matched_bills if needed
-                if (billData && billData.bills && !billData.matched_bills) {
-                    billData.matched_bills = billData.bills
-                    billData.total_amount = billData.bills.reduce((sum: number, bill: any) => sum + (bill.amount || 0), 0)
-                }
-                
-                if (!billData || !billData.matched_bills || !Array.isArray(billData.matched_bills)) {
-                    console.error("❌ Invalid bill selection data:", billData)
-                    setAiResponse("عذراً، حدث خطأ في معالجة بيانات الفواتير")
-                    setVoiceState("speaking")
-                    stopFillerAudio()
-                    await TTSService.speak("عذراً، حدث خطأ في معالجة بيانات الفواتير")
-                    return
-                }
-                
-                setBillSelectionData(billData)
-                setShowBillSelection(true)
-                setPendingBillPayment(true)
+                try {
+                    console.log("🏦 Processing bill selection...")
+                    // Show bill selection UI
+                    const billData = smartResult.actionData as BillSelectionData
+                    console.log("💰 Bill selection data received:", billData)
 
-                setVoiceState("speaking")
-                Haptics.notificationAsync(
-                    Haptics.NotificationFeedbackType.Success,
-                )
-                stopFillerAudio()
-                await TTSService.speak(smartResult.response)
-                // Keep the response on screen - don't auto-reset to idle
+                    // Fix LLM response format - handle any legacy format issues
+                    if (billData && !billData.matched_bills) {
+                        console.log("❌ Invalid bill selection data: missing matched_bills")
+                        setAiResponse("عذراً، حدث خطأ في معالجة بيانات الفواتير")
+                        setVoiceState("speaking")
+                        await speakWithTTS("عذراً، حدث خطأ في معالجة بيانات الفواتير")
+                        return
+                    }
+
+                    if (
+                        !billData ||
+                        !billData.matched_bills ||
+                        !Array.isArray(billData.matched_bills)
+                    ) {
+                        console.error(
+                            "❌ Invalid bill selection data:",
+                            billData,
+                        )
+                        setAiResponse(
+                            "عذراً، حدث خطأ في معالجة بيانات الفواتير",
+                        )
+                        setVoiceState("speaking")
+                        await speakWithTTS(
+                            "عذراً، حدث خطأ في معالجة بيانات الفواتير",
+                        )
+                        return
+                    }
+
+                    console.log("📋 Setting bill selection data...")
+                    setBillSelectionData(billData)
+                    setShowBillSelection(true)
+                    setPendingBillPayment(true)
+
+                    console.log("🎵 Setting voice state and speaking...")
+                    setVoiceState("speaking")
+                    Haptics.notificationAsync(
+                        Haptics.NotificationFeedbackType.Success,
+                    )
+                    await speakWithTTS(smartResult.response)
+                    console.log("✅ Bill selection processing completed")
+                    // Keep the response on screen - don't auto-reset to idle
+                } catch (billError) {
+                    console.error(
+                        "🚨 CRITICAL ERROR in bill selection processing:",
+                        billError,
+                    )
+
+                    setVoiceState("speaking")
+                    await speakWithTTS("عذراً، حدث خطأ في معالجة طلب الفواتير")
+                }
             } else if (smartResult.type === "transfer_selection") {
                 // Show transfer selection UI
                 const transferData = smartResult.actionData as TransferSelectionData
@@ -351,8 +457,7 @@ export default function VoiceAssistantScreen() {
                 Haptics.notificationAsync(
                     Haptics.NotificationFeedbackType.Success,
                 )
-                stopFillerAudio()
-                await TTSService.speak(smartResult.response)
+                await speakWithTTS(smartResult.response)
                 // Keep the response on screen - don't auto-reset to idle
             } else if (smartResult.type === "transfer_payment") {
                 // Handle transfer confirmation - use LLM success message directly
@@ -362,10 +467,13 @@ export default function VoiceAssistantScreen() {
                     setShowTransferSelection(false)
                     setTransferSelectionData(null)
                     setPendingTransfer(false)
-                    
+
                     // Deduct from account
-                    deductFromAccount(transferData.source_account, transferData.amount)
-                    
+                    deductFromAccount(
+                        transferData.source_account,
+                        transferData.amount,
+                    )
+
                     // Create transaction entry for transfer
                     const newTransaction = {
                         id: `txn_${Date.now()}`,
@@ -374,7 +482,7 @@ export default function VoiceAssistantScreen() {
                         amount: -transferData.amount,
                         type: "transfer_out",
                         category: "تحويلات",
-                        recipient: transferData.recipient_name
+                        recipient: transferData.recipient_name,
                     }
 
                     // Add to transaction history
@@ -387,26 +495,26 @@ export default function VoiceAssistantScreen() {
                         amount: transferData.amount,
                         recipient: transferData.recipient_name,
                         sourceAccount: transferData.source_account,
-                        message: smartResult.response
+                        message: smartResult.response,
                     })
 
                     setShowTransactionSuccess(true)
                     setVoiceState("speaking")
-                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-                    stopFillerAudio()
-                    await TTSService.speak(smartResult.response)
+                    Haptics.notificationAsync(
+                        Haptics.NotificationFeedbackType.Success,
+                    )
+                    await speakWithTTS(smartResult.response)
                 } else if (transferData.action === "cancel") {
                     setShowTransferSelection(false)
                     setTransferSelectionData(null)
                     setPendingTransfer(false)
                     setVoiceState("speaking")
-                    stopFillerAudio()
-                    await TTSService.speak(smartResult.response)
+                    await speakWithTTS(smartResult.response)
                 }
             } else if (smartResult.type === "transfer_success") {
                 // Handle transfer success (fallback for when Claude returns this type)
                 const successData = smartResult.actionData as any
-                
+
                 // Create a mock TransferData object for processing
                 const mockTransferData: TransferData = {
                     action: "confirm_transfer",
@@ -414,9 +522,9 @@ export default function VoiceAssistantScreen() {
                     recipient_name: successData.recipientName || "سارة الراشد",
                     amount: successData.amount || 50,
                     source_account: "checking",
-                    requires_otp: true
+                    requires_otp: true,
                 }
-                
+
                 // Process the transfer directly
                 handleTransfer(mockTransferData)
             } else if (smartResult.type === "bill_payment") {
@@ -428,10 +536,13 @@ export default function VoiceAssistantScreen() {
                     setShowBillSelection(false)
                     setBillSelectionData(null)
                     setPendingBillPayment(false)
-                    
+
                     // Deduct from account
-                    deductFromAccount(paymentData.payment_source, paymentData.total_amount)
-                    
+                    deductFromAccount(
+                        paymentData.payment_source,
+                        paymentData.total_amount,
+                    )
+
                     // Get paid bills info for transaction history and success screen
                     const paidBills = currentBills.filter((bill) =>
                         paymentData.final_bills.includes(bill.id),
@@ -455,11 +566,17 @@ export default function VoiceAssistantScreen() {
                     // Update bill status to "غير مستحقة" (not due) using context
                     updateBillsStatus(paymentData.final_bills, "غير مستحقة")
 
-                    console.log("💰 Added bill payment transactions:", newTransactions.length)
+                    console.log(
+                        "💰 Added bill payment transactions:",
+                        newTransactions.length,
+                    )
                     newTransactions.forEach((tx) => {
                         console.log(`  - ${tx.description}: ${tx.amount} ريال`)
                     })
-                    console.log("📋 Updated bill statuses to 'غير مستحقة':", paymentData.final_bills.length)
+                    console.log(
+                        "📋 Updated bill statuses to 'غير مستحقة':",
+                        paymentData.final_bills.length,
+                    )
 
                     // Note: System prompt will be automatically updated via useLLMContext effect
 
@@ -470,39 +587,52 @@ export default function VoiceAssistantScreen() {
                         totalAmount: paymentData.total_amount,
                         paymentSource: paymentData.payment_source,
                         timestamp: new Date().toISOString(),
-                        message: smartResult.response
+                        message: smartResult.response,
                     })
 
                     setShowTransactionSuccess(true)
                     setVoiceState("speaking")
-                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-                    stopFillerAudio()
-                    await TTSService.speak(smartResult.response)
+                    Haptics.notificationAsync(
+                        Haptics.NotificationFeedbackType.Success,
+                    )
+                    await speakWithTTS(smartResult.response)
                 } else if (paymentData.action === "cancel") {
                     setShowBillSelection(false)
                     setBillSelectionData(null)
                     setPendingBillPayment(false)
                     setVoiceState("speaking")
-                    stopFillerAudio()
-                    await TTSService.speak(smartResult.response)
+                    await speakWithTTS(smartResult.response)
                     // Keep on speaking state
                 }
             } else if (smartResult.type === "card_security") {
                 // Handle card security operations
-                const securityData = smartResult.actionData as CardSecurityData
-                updateCardSecurity(securityData.cardId, securityData.isLocked, securityData.internetPurchasesEnabled)
+                const securityData = smartResult.actionData
                 
+                // Handle both single object and array of objects
+                const securityArray = Array.isArray(securityData) ? securityData : [securityData]
+                
+                // Apply security changes to all cards
+                securityArray.forEach((data: any) => {
+                    updateCardSecurity(
+                        data.cardId,
+                        data.isLocked,
+                        data.internetPurchasesEnabled,
+                    )
+                })
+
                 setVoiceState("speaking")
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-                
+                Haptics.notificationAsync(
+                    Haptics.NotificationFeedbackType.Success,
+                )
+
                 stopFillerAudio()
                 setTimeout(() => {
                     setAiResponse(smartResult.response)
                 }, 300)
-                
-                await TTSService.speak(smartResult.response)
+
+                await speakWithTTS(smartResult.response)
             } else {
-                // Regular response handling
+                // Regular response handling (info queries like balance check)
                 setVoiceState("speaking")
                 Haptics.notificationAsync(
                     Haptics.NotificationFeedbackType.Success,
@@ -514,14 +644,20 @@ export default function VoiceAssistantScreen() {
                     setAiResponse(smartResult.response)
                 }, 300)
 
-                await TTSService.speak(smartResult.response)
-
+                await speakWithTTS(smartResult.response)
                 // Keep on speaking state to show the answer permanently
             }
         } catch (error) {
-            console.error("Voice command error:", error)
-            stopFillerAudio()
-            await TTSService.speak("عذراً، حدث خطأ في معالجة طلبك")
+            console.error("🚨 CRITICAL Voice command error:", error)
+
+            try {
+                await speakWithTTS("عذراً، حدث خطأ في معالجة طلبك")
+            } catch (ttsError) {
+                console.error(
+                    "🚨 TTS also failed during error handling:",
+                    ttsError,
+                )
+            }
             // Keep on speaking state to show error message
         }
 
@@ -548,7 +684,10 @@ export default function VoiceAssistantScreen() {
                 setPendingBillPayment(false)
 
                 // Deduct payment amount from account
-                deductFromAccount(paymentData.payment_source, paymentData.total_amount)
+                deductFromAccount(
+                    paymentData.payment_source,
+                    paymentData.total_amount,
+                )
 
                 // Get paid bills info for transaction history and success screen
                 const paidBills = currentBills.filter((bill) =>
@@ -557,7 +696,7 @@ export default function VoiceAssistantScreen() {
 
                 // Update the bills state and banking context for future queries
                 if (result.updatedBills) {
-                    setCurrentBills(result.updatedBills)
+                    // Bill updates are handled through the BillsContext automatically
 
                     // Create transaction entries for each paid bill
 
@@ -600,21 +739,18 @@ export default function VoiceAssistantScreen() {
 
                 setShowTransactionSuccess(true)
                 setVoiceState("speaking")
-                stopFillerAudio()
-                await TTSService.speak(result.message)
+                await speakWithTTS(result.message)
                 // Keep on speaking state to show transaction success
             } else {
                 setAiResponse(result.message)
                 setVoiceState("speaking")
-                stopFillerAudio()
-                await TTSService.speak(result.message)
+                await speakWithTTS(result.message)
             }
         } catch (error) {
             console.error("Payment error:", error)
             setAiResponse("حدث خطأ في معالجة الدفع")
             setVoiceState("speaking")
-            stopFillerAudio()
-            await TTSService.speak("حدث خطأ في معالجة الدفع")
+            await speakWithTTS("حدث خطأ في معالجة الدفع")
         }
     }
 
@@ -634,10 +770,10 @@ export default function VoiceAssistantScreen() {
         try {
             setVoiceState("processing")
             setProcessingMessage("جاري معالجة التحويل...")
-            
+
             const result = await TransferService.processTransfer(
                 transferData,
-                "1234" // Mock OTP for demo
+                "1234", // Mock OTP for demo
             )
 
             if (result.success) {
@@ -646,7 +782,10 @@ export default function VoiceAssistantScreen() {
                 setPendingTransfer(false)
 
                 // Deduct transfer amount from account
-                deductFromAccount(transferData.source_account, transferData.amount)
+                deductFromAccount(
+                    transferData.source_account,
+                    transferData.amount,
+                )
 
                 // Create transaction entry for transfer
                 const newTransaction = {
@@ -656,7 +795,7 @@ export default function VoiceAssistantScreen() {
                     amount: -transferData.amount,
                     type: "transfer_out",
                     category: "تحويلات",
-                    recipient: transferData.recipient_name
+                    recipient: transferData.recipient_name,
                 }
 
                 // Add to transaction history
@@ -670,26 +809,23 @@ export default function VoiceAssistantScreen() {
                     recipient: transferData.recipient_name,
                     sourceAccount: transferData.source_account,
                     message: result.message,
-                    updatedBalances: result.updatedBalances
+                    updatedBalances: result.updatedBalances,
                 })
 
                 setShowTransactionSuccess(true)
                 setVoiceState("speaking")
-                stopFillerAudio()
-                await TTSService.speak(result.message)
+                await speakWithTTS(result.message)
                 // Keep on speaking state to show transaction success
             } else {
                 setAiResponse(result.message)
                 setVoiceState("speaking")
-                stopFillerAudio()
-                await TTSService.speak(result.message)
+                await speakWithTTS(result.message)
             }
         } catch (error) {
             console.error("Transfer error:", error)
             setAiResponse("حدث خطأ في معالجة التحويل")
             setVoiceState("speaking")
-            stopFillerAudio()
-            await TTSService.speak("حدث خطأ في معالجة التحويل")
+            await speakWithTTS("حدث خطأ في معالجة التحويل")
         }
     }
 
@@ -713,35 +849,86 @@ export default function VoiceAssistantScreen() {
     }
 
     const playFillerAudio = (fillerKey: string) => {
+        console.log("🎵 Attempting to play filler audio:", fillerKey)
+
         const audioFiles =
             tools.AUDIO_FILES[fillerKey as keyof typeof tools.AUDIO_FILES]
-        if (!audioFiles || audioFiles.length === 0) return
+        if (!audioFiles || audioFiles.length === 0) {
+            console.log("❌ No filler audio files found for key:", fillerKey)
+            return
+        }
 
-        // Stop any existing filler audio
+        // Stop any existing filler audio first
         if (fillerPlayerRef.current) {
+            console.log("🛑 Stopping existing filler audio")
+            fillerPlayerRef.current.removeAllListeners()
             fillerPlayerRef.current.remove()
             fillerPlayerRef.current = null
         }
 
+        console.log("▶️ Creating filler audio player")
         const player = createAudioPlayer(audioFiles[0])
         fillerPlayerRef.current = player
         player.volume = 1.0
-        player.play()
+
+        // Flag to prevent duplicate cleanup
+        let isCleanedUp = false
+
         player.addListener("playbackStatusUpdate", (s) => {
-            if (s.isLoaded && s.didJustFinish) {
-                player.remove()
-                if (fillerPlayerRef.current === player) {
-                    fillerPlayerRef.current = null
+            try {
+                if (s.isLoaded && s.didJustFinish && !isCleanedUp) {
+                    console.log("✅ Filler audio finished")
+                    // Mark as cleaned up immediately to prevent duplicate cleanup
+                    isCleanedUp = true
+
+                    // Clear the ref first to prevent race conditions
+                    if (fillerPlayerRef.current === player) {
+                        fillerPlayerRef.current = null
+                    }
+                    // Don't clean up - let audio system handle it
                 }
+            } catch (statusError) {
+                console.error("🚨 CRITICAL ERROR in filler audio status handler:", statusError)
             }
         })
+
+        player.play()
+        console.log("🎵 Filler audio started playing")
     }
-    
+
     const stopFillerAudio = () => {
-        if (fillerPlayerRef.current) {
-            console.log("🔇 Stopping filler audio")
-            fillerPlayerRef.current.remove()
+        try {
+            if (fillerPlayerRef.current) {
+                console.log("🔇 Stopping filler audio")
+                // Clear the ref first to prevent race conditions
+                fillerPlayerRef.current = null
+                // Don't try to clean up manually - let audio system handle it
+                console.log("✅ Filler audio stopped")
+            } else {
+                console.log("🔇 No filler audio to stop")
+            }
+        } catch (error) {
+            console.error("🚨 CRITICAL ERROR in stopFillerAudio:", error)
+            // Force reset the ref to prevent future issues
             fillerPlayerRef.current = null
+        }
+    }
+
+    // Helper function to safely speak with TTS (prevents overlaps)
+    const speakWithTTS = async (text: string) => {
+        try {
+            if (!text || text.trim().length === 0) {
+                console.error("❌ Empty text provided to TTS")
+                return
+            }
+
+            stopFillerAudio()
+            await TTSService.stop()
+
+            await TTSService.speak(text)
+        } catch (error) {
+            console.error("🚨 CRITICAL TTS ERROR:", error)
+            // Don't re-throw - just log and continue
         }
     }
 
@@ -750,17 +937,17 @@ export default function VoiceAssistantScreen() {
             "🎙️ Button pressed - Current state:",
             voiceState,
             "Busy:",
-            busy
+            busy,
         )
 
         if ((voiceState === "idle" || voiceState === "speaking") && !busy) {
             // Track button intent and start time
             buttonIntentHeld.current = true
             buttonPressStartTime.current = Date.now()
-            
+
             // Set button held in context
             setIsButtonHeld(true)
-            
+
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
 
             // Simple button press animation
@@ -793,25 +980,32 @@ export default function VoiceAssistantScreen() {
 
     const handleMicRelease = () => {
         const holdDuration = Date.now() - buttonPressStartTime.current
-        
-        console.log("🎙️ Button release event - Current state:", voiceState, "Hold duration:", holdDuration + "ms")
-        
+
+        console.log(
+            "🎙️ Button release event - Current state:",
+            voiceState,
+            "Hold duration:",
+            holdDuration + "ms",
+        )
+
         // Ignore very quick releases (likely false events from React Native)
         if (holdDuration < 300) {
             console.log("🚫 Ignoring premature release event (too quick)")
             return
         }
-        
+
         // Ignore if we never intended to hold the button
         if (!buttonIntentHeld.current) {
-            console.log("🚫 Ignoring release event (button was not intentionally held)")
+            console.log(
+                "🚫 Ignoring release event (button was not intentionally held)",
+            )
             return
         }
-        
+
         // Mark button as actually released
         buttonIntentHeld.current = false
         console.log("✅ Accepting button release")
-        
+
         // Set button released in context
         setIsButtonHeld(false)
 
@@ -824,16 +1018,18 @@ export default function VoiceAssistantScreen() {
         if (voiceState === "listening") {
             stopListening()
             console.log("✅ Stopped listening")
-            
+
             // Don't set to idle immediately - let the processing logic handle state transitions
         }
-        
+
         // Mark STT processing as complete (button released = no more speech)
         if (isSTTProcessing) {
             console.log("🎯 Button released - marking STT processing complete")
             setIsSTTProcessing(false)
         } else {
-            console.log("ℹ️ Button released but STT not processing, no action needed")
+            console.log(
+                "ℹ️ Button released but STT not processing, no action needed",
+            )
         }
     }
 
@@ -1134,7 +1330,7 @@ export default function VoiceAssistantScreen() {
                 <Pressable
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                        handleVoiceCommand("حول ألف ريال لأحمد")
+                        handleVoiceCommand("حول ألف ريال لسارة")
                     }}
                     style={{
                         backgroundColor: "#ffffff",
@@ -1166,7 +1362,7 @@ export default function VoiceAssistantScreen() {
                                     marginTop: 2,
                                 }}
                             >
-                                "حول ألف ريال لأحمد"
+                                "حول ألف ريال لسارة"
                             </Text>
                         </View>
                         <View

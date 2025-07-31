@@ -27,8 +27,6 @@ class TTSService {
     private currentPlayer: AudioPlayer | null = null
     private isPlaying = false
     private audioConfigured = false
-    private audioQueue: string[] = []
-    private processingQueue = false
 
     private constructor() {
         this.configureAudioSession()
@@ -52,32 +50,76 @@ class TTSService {
     /* ---------- Public: Speak ---------- */
     async speak(text: string) {
         try {
+            // Input validation
+            if (!text || typeof text !== "string" || text.trim().length === 0) {
+                console.error("❌ Invalid text provided to TTS:", {
+                    text,
+                    type: typeof text,
+                })
+                return
+            }
+
             const startTime = Date.now()
-            console.log("🗣️ TTS start:", text)
+            console.log(
+                "🗣️ TTS request:",
+                text.substring(0, 100) + (text.length > 100 ? "..." : ""),
+            )
+            console.log("🎵 Audio state:", {
+                isPlaying: this.isPlaying,
+                hasCurrentPlayer: !!this.currentPlayer,
+                audioConfigured: this.audioConfigured,
+            })
+
+            // Stop any existing audio immediately
+            console.log("🛑 Stopping current audio before new TTS")
             await this.stop()
 
-            if (!this.audioConfigured) await this.configureAudioSession()
+            if (!this.audioConfigured) {
+                console.log("⚙️ Configuring audio session...")
+                await this.configureAudioSession()
+            }
 
+            console.log("🎤 Generating speech...")
             const audioUri = await this.generateSpeech(text)
             if (audioUri) {
+                console.log("▶️ Playing generated audio:", audioUri)
                 await this.playAudio(audioUri)
                 const endTime = Date.now()
-                console.log(`⚡ TTS took ${endTime - startTime}ms`)
+                console.log(
+                    `⚡ TTS completed successfully in ${endTime - startTime}ms`,
+                )
+            } else {
+                console.error("❌ Failed to generate audio URI")
             }
         } catch (err) {
-            console.error("❌ TTS error:", err)
+            console.error("❌ TTS critical error:", err)
+            // Reset state on error
+            this.isPlaying = false
+            this.currentPlayer = null
         }
     }
 
     /* ---------- Public: Stop ---------- */
     async stop() {
-        if (!this.currentPlayer) return
+        if (!this.currentPlayer) {
+            console.log("🔇 No current player to stop")
+            return
+        }
         try {
-            this.currentPlayer.pause()
-            this.currentPlayer.remove()
+            console.log("🛑 Stopping current audio player")
+
+            if (this.isPlaying) {
+                this.currentPlayer.pause()
+                console.log("⏸️ Audio paused")
+            }
+
+            // Don't try to manually clean up - let audio system handle it
+            this.currentPlayer = null
+            this.isPlaying = false
+            console.log("✅ Audio state reset")
         } catch (err) {
             console.error("❌ Stop error:", err)
-        } finally {
+            // Ensure state is reset even if pause fails
             this.currentPlayer = null
             this.isPlaying = false
         }
@@ -88,6 +130,9 @@ class TTSService {
         try {
             // Ensure audio session is configured before playing
             if (!this.audioConfigured) {
+                console.log(
+                    "⚙️ Audio session not configured, configuring now...",
+                )
                 await this.configureAudioSession()
                 // Wait a bit for audio session to stabilize
                 await new Promise((resolve) => setTimeout(resolve, 100))
@@ -95,15 +140,30 @@ class TTSService {
 
             console.log("🎵 Creating audio player for:", uri)
             this.currentPlayer = createAudioPlayer(uri)
+
+            if (!this.currentPlayer) {
+                throw new Error("Failed to create audio player")
+            }
+
             this.currentPlayer.volume = 1.0
             this.isPlaying = true
 
+            // Add comprehensive event listeners
+            this.currentPlayer.addListener("playbackStatusUpdate", (status) => {
+                if (status.isLoaded && status.didJustFinish) {
+                    console.log("✅ Audio playback finished naturally")
+                    this.onPlaybackFinished(uri)
+                }
+            })
+
+            console.log("▶️ Starting audio playback...")
             await this.currentPlayer.play()
-            console.log("▶️ Audio playing")
+            console.log("🎵 Audio is now playing")
         } catch (err) {
-            console.error("❌ Playback error:", err)
+            console.error("❌ Playback critical error:", err)
             this.isPlaying = false
             this.currentPlayer = null
+            throw err
         }
     }
 
@@ -112,7 +172,7 @@ class TTSService {
         this.isPlaying = false
 
         if (this.currentPlayer) {
-            this.currentPlayer.remove()
+            // Don't try to manually clean up - let audio system handle it
             this.currentPlayer = null
         }
 
@@ -129,8 +189,16 @@ class TTSService {
 
     /* ---------- ElevenLabs Request ---------- */
     private async generateSpeech(text: string): Promise<string | null> {
+        console.log(
+            "🎤 Starting speech generation for text:",
+            text.substring(0, 50) + "...",
+        )
+
         if (!TTS_CONFIG.apiKey || !TTS_CONFIG.voiceId) {
-            console.error("❌ Missing ElevenLabs API key or voice ID")
+            console.error("❌ Missing ElevenLabs credentials:", {
+                hasApiKey: !!TTS_CONFIG.apiKey,
+                hasVoiceId: !!TTS_CONFIG.voiceId,
+            })
             return null
         }
 
@@ -141,7 +209,10 @@ class TTSService {
             voice_settings: TTS_CONFIG.voiceSettings,
         }
 
+        console.log("🌐 Making ElevenLabs API request to:", url)
+
         try {
+            const startTime = Date.now()
             const res = await fetch(url, {
                 method: "POST",
                 headers: {
@@ -151,17 +222,31 @@ class TTSService {
                 body: JSON.stringify(body),
             })
 
+            const apiTime = Date.now() - startTime
+            console.log(
+                `🌐 API response received in ${apiTime}ms, status:`,
+                res.status,
+            )
+
             if (!res.ok) {
-                console.error(
-                    "❌ ElevenLabs error:",
-                    res.status,
-                    await res.text(),
-                )
+                const errorText = await res.text()
+                console.error("❌ ElevenLabs API error:", {
+                    status: res.status,
+                    statusText: res.statusText,
+                    error: errorText,
+                })
                 return null
             }
 
+            console.log("📦 Converting audio data...")
             /* ---- convert ArrayBuffer → base64 (without Buffer) ---- */
             const arrayBuf = await res.arrayBuffer()
+            console.log(
+                "📦 Received audio data size:",
+                arrayBuf.byteLength,
+                "bytes",
+            )
+
             const uint8Arr = new Uint8Array(arrayBuf)
             let binary = ""
             for (let i = 0; i < uint8Arr.length; i++) {
@@ -171,21 +256,43 @@ class TTSService {
 
             /* ---- write to a temp .mp3 ---- */
             const uri = `${FileSystem.cacheDirectory}tts_${Date.now()}.mp3`
+            console.log("💾 Writing audio file to:", uri)
+
             await FileSystem.writeAsStringAsync(uri, base64, {
                 encoding: FileSystem.EncodingType.Base64,
             })
 
-            console.log("✅ TTS generated")
+            console.log(
+                "✅ TTS generated successfully, file size:",
+                base64.length,
+                "chars",
+            )
             return uri
         } catch (err) {
-            console.error("❌ Generate speech failed:", err)
+            console.error("❌ Generate speech critical error:", err)
             return null
         }
+    }
+
+    /* ---------- Public: Reset ---------- */
+    async reset() {
+        console.log("🔄 Resetting TTS service completely")
+        await this.stop()
+        this.audioConfigured = false
+        console.log("♻️ TTS service reset complete")
     }
 
     /* ---------- Getters ---------- */
     getIsPlaying() {
         return this.isPlaying
+    }
+
+    getAudioState() {
+        return {
+            isPlaying: this.isPlaying,
+            hasCurrentPlayer: !!this.currentPlayer,
+            audioConfigured: this.audioConfigured,
+        }
     }
 
     static isConfigured() {

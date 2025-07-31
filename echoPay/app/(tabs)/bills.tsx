@@ -1,6 +1,7 @@
 import React from "react"
 import { ScrollView, View, Text } from "react-native"
 import BillsSection from "../../components/BillsSection"
+import VoiceButton from "../../components/VoiceButton"
 import { useBills } from "../../context/BillsContext"
 
 export default function BillsScreen() {
@@ -41,6 +42,9 @@ export default function BillsScreen() {
                     <BillsSection userBills={userBills} />
                 </View>
             </ScrollView>
+
+            {/* Voice Assistant FAB */}
+            <VoiceButton />
         </View>
     )
 }
