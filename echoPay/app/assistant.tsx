@@ -48,6 +48,7 @@ import { useAccounts } from "../context/AccountContext"
 import { useCards } from "../context/CardContext"
 import { useVoice } from "../context/VoiceContext"
 import { useBills } from "../context/BillsContext"
+import { useLLMContext } from "../hooks/useLLMContext"
 
 const { width, height } = Dimensions.get("window")
 
@@ -55,12 +56,15 @@ const { width, height } = Dimensions.get("window")
 type VoiceState = "idle" | "listening" | "transcribing" | "processing" | "speaking"
 
 export default function VoiceAssistantScreen() {
-    // Transaction context
+    // Context hooks
     const { transactions: currentTransactions, addTransactions } =
         useTransactions()
     const { deductFromAccount } = useAccounts()
     const { cards, updateCardSecurity } = useCards()
     const { bills: currentBills, updateBillsStatus } = useBills()
+    
+    // Centralized LLM context that automatically updates
+    const llmContext = useLLMContext()
 
     // Voice interaction state
     const [voiceState, setVoiceState] = useState<VoiceState>("idle")
@@ -171,22 +175,23 @@ export default function VoiceAssistantScreen() {
         })
     }, [])
 
-    // Initialize history with current bills and transactions
+    // Automatic system prompt updates - keeps LLM context fresh
     useEffect(() => {
-        if (historyRef.current.length === 0) {
-            historyRef.current = [
-                {
-                    role: "system",
-                    content: tools.buildPrompt({
-                        ...bankingData,
-                        creditCards: cards,
-                        transactions: currentTransactions,
-                        bills: currentBills,
-                    } as unknown as BankingContext),
-                },
-            ]
+        const systemMessage = {
+            role: "system" as const,
+            content: tools.buildPrompt(llmContext),
         }
-    }, [currentBills, currentTransactions])
+        
+        if (historyRef.current.length === 0) {
+            // Initialize with system message
+            historyRef.current = [systemMessage]
+            console.log("🤖 LLM context initialized")
+        } else {
+            // Update existing system message (always at index 0)
+            historyRef.current[0] = systemMessage
+            console.log("🔄 LLM context updated automatically")
+        }
+    }, [llmContext])
 
     // Command processing
     const processedCommandRef = useRef<string>("")
@@ -456,23 +461,7 @@ export default function VoiceAssistantScreen() {
                     })
                     console.log("📋 Updated bill statuses to 'غير مستحقة':", paymentData.final_bills.length)
 
-                    // Update the system message in history with new data
-                    const updatedContext = {
-                        ...bankingData,
-                        creditCards: cards,
-                        transactions: [...newTransactions, ...currentTransactions],
-                        bills: currentBills.map((bill) => {
-                            if (paymentData.final_bills.includes(bill.id)) {
-                                return { ...bill, status: "غير مستحقة" }
-                            }
-                            return bill
-                        }),
-                    } as unknown as BankingContext
-
-                    historyRef.current[0] = {
-                        role: "system",
-                        content: tools.buildPrompt(updatedContext),
-                    }
+                    // Note: System prompt will be automatically updated via useLLMContext effect
 
                     // Set transaction data for success screen
                     setTransactionData({
@@ -595,21 +584,7 @@ export default function VoiceAssistantScreen() {
                         console.log(`  - ${tx.description}: ${tx.amount} ريال`)
                     })
 
-                    const updatedContext = {
-                        ...bankingData,
-                        creditCards: cards,
-                        transactions: [
-                            ...newTransactions,
-                            ...currentTransactions,
-                        ],
-                        bills: result.updatedBills,
-                    } as unknown as BankingContext
-
-                    // Update the system message in history with new data
-                    historyRef.current[0] = {
-                        role: "system",
-                        content: tools.buildPrompt(updatedContext),
-                    }
+                    // Note: System prompt will be automatically updated via useLLMContext effect
                 }
 
                 // Show transaction success screen

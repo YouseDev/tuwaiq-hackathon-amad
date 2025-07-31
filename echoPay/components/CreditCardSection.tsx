@@ -56,23 +56,8 @@ const CreditCardSection = () => {
                             {card.cardType}
                         </Text>
                     </View>
-                    {/* Show different info for mada vs credit cards */}
-                    {card.cardType === "مدى" ? (
-                        // Mada card shows account balance
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Text
-                                style={{
-                                    fontSize: 20,
-                                    color: '#10B981',
-                                    fontFamily: "AppFontBold",
-                                }}
-                            >
-                                {card.availableCredit.toLocaleString()}{" "}
-                                <Text style={{ fontSize: 16, color: '#000000' }}>ر.س</Text>
-                            </Text>
-                            <Text style={{ fontSize: 18, color: '#000000', fontFamily: "AppFontRegular" }}>الرصيد المتاح</Text>
-                        </View>
-                    ) : (
+                    {/* Show credit info only for credit cards (not mada) */}
+                    {card.cardType !== "مدى" && (
                         // Credit cards show limit and used amount
                         <>
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>

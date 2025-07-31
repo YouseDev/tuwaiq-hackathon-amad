@@ -27,6 +27,8 @@ class TTSService {
     private currentPlayer: AudioPlayer | null = null
     private isPlaying = false
     private audioConfigured = false
+    private audioQueue: string[] = []
+    private processingQueue = false
 
     private constructor() {
         this.configureAudioSession()
