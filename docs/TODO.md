@@ -15,6 +15,11 @@
 -   [x] Implement card lock/unlock for security
 -   [x] Polish the UI
 -   [x] Improve ai visualization while listening to the user
+-   [ ] Setup more specific filler audio for core feature
+-   [ ] Add header conformation for bill conformation card
+
+# FUTURE THINGS TO DO
+
 -   [ ] Brain storm how to implement bank/ads questions
 -   [ ] Research openning the voice feature using phone side buttons for accessibility
 -   [ ] Research multi-language support (English, Hindi, Pakistan etc)

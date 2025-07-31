@@ -1,11 +1,11 @@
-import React, { useState } from "react"
+import React from "react"
 import { ScrollView, View, Text } from "react-native"
 import BillsSection from "../../components/BillsSection"
-import bankingData from "../../assets/data/banking_data.json"
+import { useBills } from "../../context/BillsContext"
 
 export default function BillsScreen() {
-    /* -------- Demo banking data -------- */
-    const [userBills] = useState(bankingData.bills)
+    /* -------- Bills from context -------- */
+    const { bills: userBills } = useBills()
 
     /* -------- UI -------- */
     return (

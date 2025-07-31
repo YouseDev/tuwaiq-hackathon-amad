@@ -47,6 +47,7 @@ import { useTransactions } from "../context/TransactionContext"
 import { useAccounts } from "../context/AccountContext"
 import { useCards } from "../context/CardContext"
 import { useVoice } from "../context/VoiceContext"
+import { useBills } from "../context/BillsContext"
 
 const { width, height } = Dimensions.get("window")
 
@@ -59,6 +60,7 @@ export default function VoiceAssistantScreen() {
         useTransactions()
     const { deductFromAccount } = useAccounts()
     const { cards, updateCardSecurity } = useCards()
+    const { bills: currentBills, updateBillsStatus } = useBills()
 
     // Voice interaction state
     const [voiceState, setVoiceState] = useState<VoiceState>("idle")
@@ -72,7 +74,6 @@ export default function VoiceAssistantScreen() {
     const [billSelectionData, setBillSelectionData] =
         useState<BillSelectionData | null>(null)
     const [pendingBillPayment, setPendingBillPayment] = useState(false)
-    const [currentBills, setCurrentBills] = useState(bankingData.bills)
     
     // Transfer state
     const [showTransferSelection, setShowTransferSelection] = useState(false)
@@ -426,7 +427,64 @@ export default function VoiceAssistantScreen() {
                     // Deduct from account
                     deductFromAccount(paymentData.payment_source, paymentData.total_amount)
                     
-                    // Show success and speak LLM message
+                    // Get paid bills info for transaction history and success screen
+                    const paidBills = currentBills.filter((bill) =>
+                        paymentData.final_bills.includes(bill.id),
+                    )
+
+                    // Create transaction entries for each paid bill
+                    const newTransactions = paidBills.map((bill) => ({
+                        id: `txn_${Date.now()}_${bill.id}`,
+                        date: new Date().toISOString().split("T")[0],
+                        description: `دفع فاتورة ${bill.provider}`,
+                        amount: -bill.amount, // Negative for payment/debit
+                        type: "bill_payment",
+                        category: "فواتير",
+                        merchant: bill.provider,
+                        location: "المملكة العربية السعودية",
+                    }))
+
+                    // Add new transactions to the global transaction context
+                    addTransactions(newTransactions)
+
+                    // Update bill status to "غير مستحقة" (not due) using context
+                    updateBillsStatus(paymentData.final_bills, "غير مستحقة")
+
+                    console.log("💰 Added bill payment transactions:", newTransactions.length)
+                    newTransactions.forEach((tx) => {
+                        console.log(`  - ${tx.description}: ${tx.amount} ريال`)
+                    })
+                    console.log("📋 Updated bill statuses to 'غير مستحقة':", paymentData.final_bills.length)
+
+                    // Update the system message in history with new data
+                    const updatedContext = {
+                        ...bankingData,
+                        creditCards: cards,
+                        transactions: [...newTransactions, ...currentTransactions],
+                        bills: currentBills.map((bill) => {
+                            if (paymentData.final_bills.includes(bill.id)) {
+                                return { ...bill, status: "غير مستحقة" }
+                            }
+                            return bill
+                        }),
+                    } as unknown as BankingContext
+
+                    historyRef.current[0] = {
+                        role: "system",
+                        content: tools.buildPrompt(updatedContext),
+                    }
+
+                    // Set transaction data for success screen
+                    setTransactionData({
+                        transactionId: `TXN${Date.now()}`,
+                        paidBills: paidBills,
+                        totalAmount: paymentData.total_amount,
+                        paymentSource: paymentData.payment_source,
+                        timestamp: new Date().toISOString(),
+                        message: smartResult.response
+                    })
+
+                    setShowTransactionSuccess(true)
                     setVoiceState("speaking")
                     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
                     stopFillerAudio()
