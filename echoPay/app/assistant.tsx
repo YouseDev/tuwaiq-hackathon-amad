@@ -608,8 +608,11 @@ export default function VoiceAssistantScreen() {
                 // Handle card security operations
                 const securityData = smartResult.actionData
                 
+                // Check if cards are in a 'cards' array or directly in actionData
+                const cardsToUpdate = securityData.cards || securityData
+                
                 // Handle both single object and array of objects
-                const securityArray = Array.isArray(securityData) ? securityData : [securityData]
+                const securityArray = Array.isArray(cardsToUpdate) ? cardsToUpdate : [cardsToUpdate]
                 
                 // Apply security changes to all cards
                 securityArray.forEach((data: any) => {

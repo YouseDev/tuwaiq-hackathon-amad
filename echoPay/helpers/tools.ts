@@ -14,6 +14,10 @@ const AUDIO_FILES = {
     transaction_search: [require("../assets/audio/filler-2.mp3")],
     general_request: [require("../assets/audio/filler-3.mp3")],
     transfer_payment: [require("../assets/audio/filler-4.mp3")],
+    card_security: [require("../assets/audio/filler-4.mp3")],
+    bill_selection: [require("../assets/audio/filler-4.mp3")],
+    bill_payment: [require("../assets/audio/filler-4.mp3")],
+    transfer_selection: [require("../assets/audio/filler-4.mp3")],
 }
 
 const buildPrompt = (context: BankingContext) => {
