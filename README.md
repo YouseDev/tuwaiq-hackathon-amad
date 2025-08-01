@@ -1,9 +1,9 @@
 # أنس - المساعد المصرفي الصوتي 🏦🎙️
 
-**Team**: فريق تمكين (Team Tamkeen)  
-**Presentation**: https://docs.google.com/presentation/d/1ppOjPNunknd7JnKiTOP17UTUkz_cXzlcb5v7WjXxlAs/edit?usp=sharing  
-**Technical Docs**: [DEV.md](DEV.md)
-
+### **Team**: فريق تمكين (Team Tamkeen)  
+### **Presentation**: [google Slides](https://docs.google.com/presentation/d/1ppOjPNunknd7JnKiTOP17UTUkz_cXzlcb5v7WjXxlAs/edit?usp=sharing) 
+### **Technical Docs**: [DEV.md](DEV.md)
+---
 > **أول مساعد مصرفي صوتي عربي شامل يجعل المصرفية متاحة للجميع**
 > **First comprehensive Arabic voice banking assistant that makes banking accessible for everyone**
 
