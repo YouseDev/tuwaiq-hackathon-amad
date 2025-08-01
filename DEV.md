@@ -1,8 +1,8 @@
-# EchoPay Developer Documentation 🔧
+# أنس Developer Documentation 🔧
 
-> **Comprehensive technical guide for developers working on EchoPay**
+> **Comprehensive technical guide for developers working on أنس**
 
-This document provides in-depth technical information about EchoPay's architecture, implementation details, and development workflow for software engineers and technical contributors.
+This document provides in-depth technical information about أنس's architecture, implementation details, and development workflow for software engineers and technical contributors.
 
 ## 📋 Table of Contents
 
@@ -14,10 +14,9 @@ This document provides in-depth technical information about EchoPay's architectu
 6. [API Integrations](#api-integrations)
 7. [Development Setup](#development-setup)
 8. [Build & Deployment](#build--deployment)
-9. [Testing](#testing)
-10. [Security Implementation](#security-implementation)
-11. [Performance Optimization](#performance-optimization)
-12. [Troubleshooting](#troubleshooting)
+9. [Security Implementation](#security-implementation)
+10. [Performance Optimization](#performance-optimization)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -27,7 +26,7 @@ This document provides in-depth technical information about EchoPay's architectu
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                        EchoPay App                          │
+│                        أنس App                             │
 ├─────────────────────────────────────────────────────────────┤
 │  React Native (Expo) - Cross-Platform Mobile Framework     │
 ├─────────────────────────────────────────────────────────────┤
@@ -60,7 +59,7 @@ This document provides in-depth technical information about EchoPay's architectu
 ### Key Architectural Decisions
 
 #### 1. **Dual-LLM Strategy** ⭐
-**Innovation Highlight**: EchoPay uses two AI models simultaneously for optimal UX:
+**Innovation Highlight**: أنس uses two AI models simultaneously for optimal UX:
 
 - **FastLLM (GPT-4.1-nano)**: Instant command categorization and filler audio selection
 - **SmartLLM (Claude Sonnet 4)**: Comprehensive banking logic and Arabic language processing
@@ -352,7 +351,7 @@ class FastLLMService {
 
 ### React Context Architecture
 
-EchoPay uses React Context for centralized state management:
+أنس uses React Context for centralized state management:
 
 #### 1. VoiceContext - Voice Interaction State
 ```typescript
@@ -482,8 +481,7 @@ node >= 18.0.0
 npm >= 8.0.0
 expo-cli >= 6.0.0
 
-# Optional (for device testing)
-ios-simulator (macOS only)
+# Required for Android development
 android-studio + emulator
 ```
 
@@ -523,10 +521,8 @@ npm start
 # or
 expo start
 
-# Run on specific platforms
-expo run:ios       # iOS simulator/device
+# Run on Android
 expo run:android   # Android emulator/device
-expo start --web   # Web browser (limited features)
 
 # Development utilities
 npm run lint       # ESLint code checking
@@ -545,19 +541,12 @@ expo doctor        # Diagnose setup issues
 # Android Development
 cd echoPay/android && ./gradlew assembleDebug && cd ..
 npm run dev-install  # Uninstall + install debug APK
-
-# iOS Development  
-cd echoPay/ios && xcodebuild -workspace echoPay.xcworkspace -scheme echoPay -configuration Debug -derivedDataPath build
-npm run dev-install-ios
 ```
 
 #### Production Builds
 ```bash
 # Android Production
 cd echoPay/android && ./gradlew assembleRelease && cd ..
-
-# iOS Production
-cd echoPay/ios && xcodebuild -workspace echoPay.xcworkspace -scheme echoPay -configuration Release -derivedDataPath build
 ```
 
 ### Expo Build Service (EAS)
@@ -568,24 +557,21 @@ npm install -g eas-cli
 # Configure EAS
 eas build:configure
 
-# Build for different platforms
+# Build for Android
 eas build --platform android
-eas build --platform ios
-eas build --platform all
 
-# Submit to app stores
+# Submit to Google Play Store
 eas submit --platform android
-eas submit --platform ios
 ```
 
 ### Build Configuration (app.json)
 ```json
 {
   "expo": {
-    "name": "EchoPay",
-    "slug": "echopay",
+    "name": "أنس",
+    "slug": "anas-voice-banking",
     "version": "1.0.0",
-    "platforms": ["ios", "android"],
+    "platforms": ["android"],
     "plugins": [
       "expo-speech-recognition",
       "expo-audio"
@@ -594,85 +580,6 @@ eas submit --platform ios
       "RECORD_AUDIO",
       "MODIFY_AUDIO_SETTINGS"
     ]
-  }
-}
-```
-
----
-
-## 🧪 Testing
-
-### Current Testing Status
-⚠️ **Critical Gap**: No test files currently exist in the codebase
-
-### Recommended Testing Strategy
-
-#### 1. Unit Tests (Jest + React Native Testing Library)
-```bash
-# Install testing dependencies
-npm install --save-dev jest @testing-library/react-native @testing-library/jest-native
-```
-
-**Service Testing Example:**
-```typescript
-// __tests__/services/LLMService.test.ts
-import LLMService from '../services/LLMService';
-
-describe('LLMService', () => {
-  it('should process Arabic banking queries', async () => {
-    const service = LLMService.getInstance();
-    const response = await service.processQuery('كم رصيدي؟', mockContext);
-    
-    expect(response.type).toBe('info');
-    expect(response.response).toContain('رصيد');
-  });
-});
-```
-
-#### 2. Integration Tests
-```typescript
-// __tests__/integration/VoiceBanking.test.ts
-describe('Voice Banking Flow', () => {
-  it('should complete bill payment via voice', async () => {
-    // Mock STT service
-    mockSTT.mockResolvedValue('ابي اسدد فاتورة الكهرباء');
-    
-    // Trigger voice interaction
-    const result = await voiceHandler.processCommand();
-    
-    expect(result.success).toBe(true);
-    expect(mockTTS).toHaveBeenCalledWith(expect.stringContaining('تم دفع'));
-  });
-});
-```
-
-#### 3. E2E Testing (Detox)
-```bash
-# Install Detox
-npm install --save-dev detox
-```
-
-```typescript
-// e2e/VoiceAssistant.e2e.ts  
-describe('Voice Assistant E2E', () => {
-  it('should navigate to voice screen and process command', async () => {
-    await element(by.id('voice-tab')).tap();
-    await element(by.id('listen-button')).tap();
-    await expect(element(by.id('listening-indicator'))).toBeVisible();
-  });
-});
-```
-
-### Test Configuration
-```json
-// package.json
-{
-  "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "e2e:ios": "detox test --configuration ios.sim.debug",
-    "e2e:android": "detox test --configuration android.emu.debug"
   }
 }
 ```
@@ -718,41 +625,6 @@ if (response.type === 'bill_payment') {
 }
 ```
 
-### Production Security Requirements
-
-#### 1. Authentication System
-```typescript
-// Voice biometric authentication (planned)
-interface VoiceAuth {
-  enrollVoiceprint: (userId: string) => Promise<string>;
-  verifyVoice: (audioSample: ArrayBuffer) => Promise<boolean>;
-  updateVoiceprint: (userId: string, newSample: ArrayBuffer) => Promise<void>;
-}
-```
-
-#### 2. Data Encryption
-```typescript
-// Sensitive data encryption (required for production)
-import CryptoJS from 'crypto-js';
-
-const encryptData = (data: string, key: string): string => {
-  return CryptoJS.AES.encrypt(data, key).toString();
-};
-
-const decryptData = (encryptedData: string, key: string): string => {
-  const bytes = CryptoJS.AES.decrypt(encryptedData, key);
-  return bytes.toString(CryptoJS.enc.Utf8);
-};
-```
-
-#### 3. API Security
-```typescript
-// Request signing (planned)
-const signRequest = (payload: string, secret: string): string => {
-  return CryptoJS.HmacSHA256(payload, secret).toString();
-};
-```
-
 ---
 
 ## ⚡ Performance Optimization
@@ -788,40 +660,6 @@ private trimHistoryIfNeeded(): void {
 }
 ```
 
-### Additional Optimization Opportunities
-
-#### 1. React Optimization
-```typescript
-// Memoization for expensive components
-const VoiceVisualization = React.memo(({ amplitude }: { amplitude: number }) => {
-  return <AnimatedWave amplitude={amplitude} />;
-});
-
-// Callback optimization
-const handleVoiceInput = useCallback(async (transcript: string) => {
-  await processVoiceCommand(transcript);
-}, []);
-```
-
-#### 2. Bundle Optimization
-```json
-// metro.config.js - Tree shaking
-module.exports = {
-  resolver: {
-    alias: {
-      'crypto': 'crypto-browserify',
-      'stream': 'stream-browserify'
-    }
-  }
-};
-```
-
-#### 3. Lazy Loading
-```typescript
-// Dynamic imports for heavy components
-const VoiceAssistant = lazy(() => import('./assistant'));
-```
-
 ---
 
 ## 🐛 Troubleshooting
@@ -830,10 +668,6 @@ const VoiceAssistant = lazy(() => import('./assistant'));
 
 #### 1. Microphone Permission Errors
 ```bash
-# iOS Simulator Issue
-# Problem: Speech recognition not working in iOS simulator
-# Solution: Test on physical device - simulator doesn't have microphone access
-
 # Android Permission Issue  
 # Problem: RECORD_AUDIO permission denied
 # Solution: Add to app.json
@@ -857,8 +691,8 @@ try {
 
 #### 3. Audio Playback Issues
 ```bash
-# iOS Audio Session
-# Problem: Audio not playing on iOS
+# Android Audio Session
+# Problem: Audio not playing on Android
 # Solution: Configure audio session properly
 await Audio.setAudioModeAsync({
   allowsRecordingIOS: false,
@@ -873,9 +707,6 @@ await Audio.setAudioModeAsync({
 ```bash
 # Metro bundler cache issues
 npx expo start --clear
-
-# iOS CocoaPods issues
-cd ios && pod deintegrate && pod install && cd ..
 
 # Android Gradle issues
 cd android && ./gradlew clean && cd ..
@@ -907,183 +738,6 @@ expo start --devtools
 
 ---
 
-## 📊 Performance Monitoring
-
-### Metrics to Track
-
-#### 1. Voice Interaction Metrics
-```typescript
-interface VoiceMetrics {
-  speechRecognitionLatency: number;    // STT processing time
-  llmProcessingTime: number;           // AI response time
-  ttsGenerationTime: number;           // Audio generation time
-  totalInteractionTime: number;        // End-to-end time
-  recognitionAccuracy: number;         // Speech recognition confidence
-}
-```
-
-#### 2. Banking Operation Metrics
-```typescript
-interface BankingMetrics {
-  billPaymentSuccess: number;          // Successful bill payments
-  transferSuccess: number;             // Successful transfers  
-  voiceAuthSuccess: number;            // Voice authentication rate
-  userSatisfactionScore: number;       // User feedback rating
-}
-```
-
-### Monitoring Implementation
-```typescript
-// Performance tracking service
-class AnalyticsService {
-  static trackVoiceInteraction(metrics: VoiceMetrics) {
-    // Send to analytics service
-    console.log('Voice Metrics:', metrics);
-  }
-  
-  static trackBankingOperation(operation: string, success: boolean) {
-    // Track banking operation success rates
-    console.log(`Banking Operation: ${operation}, Success: ${success}`);
-  }
-}
-```
-
----
-
-## 🤝 Contributing Guidelines
-
-### Code Style
-
-#### 1. TypeScript Standards
-```typescript
-// Use interfaces for object shapes
-interface BankingResponse {
-  type: ResponseType;
-  response: string;
-  actionData?: any;
-}
-
-// Use enums for constants
-enum ResponseType {
-  INFO = 'info',
-  BILL_PAYMENT = 'bill_payment',
-  TRANSFER = 'transfer'
-}
-```
-
-#### 2. React Patterns
-```typescript
-// Use functional components with hooks
-const VoiceAssistant: React.FC = () => {
-  const [isListening, setIsListening] = useState(false);
-  
-  const handleVoiceInput = useCallback(async (transcript: string) => {
-    // Handle voice input
-  }, []);
-  
-  return (
-    <View className="flex-1">
-      {/* Component JSX */}
-    </View>
-  );
-};
-```
-
-#### 3. Service Patterns
-```typescript
-// Use singleton pattern for services
-class TTSService {
-  private static instance: TTSService | null = null;
-  
-  static getInstance(): TTSService {
-    if (!this.instance) {
-      this.instance = new TTSService();
-    }
-    return this.instance;
-  }
-}
-```
-
-### Pull Request Process
-
-1. **Feature Branch**: Create from `main` branch
-2. **Comprehensive Testing**: Add unit tests for new features
-3. **Documentation**: Update relevant documentation
-4. **Code Review**: Minimum 2 reviewer approval
-5. **Security Review**: For any banking-related changes
-
-### Development Workflow
-```bash
-# 1. Create feature branch
-git checkout -b feature/voice-authentication
-
-# 2. Make changes and test
-npm test
-npm run lint
-
-# 3. Commit with clear message
-git commit -m "feat: add voice authentication system"
-
-# 4. Push and create PR
-git push origin feature/voice-authentication
-```
-
----
-
-## 📈 Future Development Roadmap
-
-### Phase 1: Production Readiness (Q1 2025)
-- [ ] Real banking API integration
-- [ ] Voice biometric authentication
-- [ ] Comprehensive test coverage (>80%)
-- [ ] Security audit and penetration testing
-- [ ] SAMA regulatory compliance
-
-### Phase 2: Enhanced Features (Q2 2025)
-- [ ] Multi-dialect Arabic support
-- [ ] Offline voice recognition capability
-- [ ] Advanced fraud detection
-- [ ] Personalized financial insights
-- [ ] Cross-platform synchronization
-
-### Phase 3: Scale & Expansion (Q3-Q4 2025)
-- [ ] Multi-bank integration
-- [ ] Regional expansion (UAE, Kuwait, Qatar)
-- [ ] Business banking features
-- [ ] Investment and savings tools
-- [ ] AI-powered financial advisor
-
----
-
-## 📞 Developer Support
-
-### Getting Help
-- **Documentation**: This comprehensive guide
-- **Issues**: GitHub issues for bug reports
-- **Community**: Developer Discord/Slack channel
-- **Code Review**: Pair programming sessions available
-
-### Contact Information
-- **Technical Lead**: [Lead Developer Contact]
-- **Architecture Questions**: [Architecture Team]
-- **Security Concerns**: [Security Team]
-- **Performance Issues**: [Performance Team]
-
----
-
-## 📜 License & Compliance
-
-### Development License
-This project is developed for educational and demonstration purposes. All banking data is simulated and no real financial transactions are processed.
-
-### Production Considerations
-- **SAMA Compliance**: Required for Saudi banking operations
-- **Data Privacy**: GDPR/local privacy law compliance
-- **Security Standards**: Banking-grade security implementation
-- **Accessibility**: WCAG 2.1 AA compliance for inclusive design
-
----
-
-**EchoPay Developer Documentation - Version 1.0**
+**أنس Developer Documentation - Version 1.0**
 
 *Built with precision by Team تمكين (Tamkeen) - Engineering accessibility through voice technology* 🔧💙

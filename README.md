@@ -1,5 +1,7 @@
 # أنس - المساعد المصرفي الصوتي 🏦🎙️
 
+**Team**: فريق تمكين (Team Tamkeen) | **Presentation**: [Google Slides](https://docs.google.com/presentation/d/1ppOjPNunknd7JnKiTOP17UTUkz_cXzlcb5v7WjXxlAs/edit?usp=sharing) | **Technical Docs**: [DEV.md](DEV.md)
+
 > **أول مساعد مصرفي صوتي عربي شامل يجعل المصرفية متاحة للجميع**
 > **First comprehensive Arabic voice banking assistant that makes banking accessible for everyone**
 
@@ -20,7 +22,7 @@
 - **Dual-AI System**: Innovative technology provides instant feedback + comprehensive banking intelligence
 
 ### 🔒 **Banking-Grade Security**
-- **Voice Authentication**: Your voice is your password (demo simulation)
+- **Voice Authentication**: Biometric voice verification (planned for production)
 - **Transaction Confirmations**: Every payment requires explicit Arabic confirmation
 - **Card Security**: Lock/unlock cards instantly with voice commands
 
@@ -115,10 +117,8 @@ You: "قفل بطاقاتي"
 - ✅ Card status checking
 
 ### 🛡️ **Security Features**
-- ✅ Voice authentication (demo)
 - ✅ Transaction confirmations
 - ✅ Card security management
-- ✅ OTP verification simulation
 
 ## 🌍 Global Success Stories
 
@@ -132,14 +132,12 @@ You: "قفل بطاقاتي"
 - **245 million interactions in 2024** alone
 - **98% of users** get answers in under 45 seconds
 
-**EchoPay brings this proven global success to Arabic speakers for the first time!**
+**أنس brings this proven global success to Arabic speakers for the first time!**
 
 ## 🔧 Technical Requirements
 
 ### 📱 **Supported Platforms**
-- **iOS 13.0+**: iPhone and iPad
 - **Android 8.0+**: Android phones and tablets
-- **Web Browser**: Chrome, Safari, Firefox (limited features)
 
 ### 🎤 **Hardware Requirements** 
 - **Microphone**: Built-in or external microphone
@@ -177,19 +175,13 @@ EXPO_PUBLIC_ELEVENLABS_VOICE_ID=your_voice_id
 
 ### 3. **Run the App**
 ```bash
-# On iOS simulator
-npx expo run:ios
-
 # On Android emulator  
 npx expo run:android
-
-# Web version (limited features)
-npx expo start --web
 ```
 
 ## 🎮 Demo Mode
 
-EchoPay includes comprehensive demo data:
+أنس includes comprehensive demo data:
 
 - **Sample User**: أحمد محمد العلي
 - **Mock Accounts**: Checking (5,300 SR), Savings (15,750 SR)  
@@ -215,19 +207,6 @@ EchoPay includes comprehensive demo data:
 - **100% voice-operable** interface for complete accessibility
 - **Sub-45 second** average transaction completion time
 
-## 🔒 Privacy & Security
-
-### 🛡️ **Data Protection**
-- **Local Processing**: Banking data stays on your device
-- **Encrypted Communication**: All API calls use HTTPS
-- **No Data Storage**: AI providers don't store your banking information
-- **Demo Data Only**: Currently uses mock banking data for testing
-
-### 🔐 **Security Features**
-- **Voice Authentication**: Biometric voice verification (planned)
-- **Transaction Limits**: Built-in spending controls
-- **Session Timeouts**: Automatic logout for security
-- **Audit Trail**: Complete transaction logging
 
 ## 🚧 Current Status
 
@@ -243,66 +222,18 @@ EchoPay includes comprehensive demo data:
 
 ### 🔄 **In Development (19%)**
 - 🔄 Real banking API integration
-- 🔄 Advanced voice authentication
+- 🔄 Advanced voice authentication system
 - 🔄 Enhanced security protocols
-- 🔄 Multi-dialect Arabic support
-- 🔄 Offline capability
 
-## 🎯 Future Roadmap
-
-### 📅 **Phase 1: Production Ready (3 months)**
-- Real Saudi bank API integration
-- SAMA regulatory compliance
-- Production security implementation
-- Beta testing with 1,000 users
-
-### 📅 **Phase 2: Market Expansion (6 months)**  
-- Support for all major Saudi banks
-- Advanced fraud detection
-- Personalized financial insights
-- Multi-device synchronization
-
-### 📅 **Phase 3: Regional Growth (12 months)**
-- Expansion to UAE, Kuwait, Qatar
-- Investment and savings features  
-- Business banking support
-- AI-powered financial advisor
-
-## 🤝 Support & Community
-
-### 📧 **Contact Information**
-- **Team**: فريق تمكين (Team Tamkeen)
-- **Email**: [team-contact]
-- **Demo**: Available for live testing
-- **Presentation**: [Google Slides Presentation](https://docs.google.com/presentation/d/1ppOjPNunknd7JnKiTOP17UTUkz_cXzlcb5v7WjXxlAs/edit?usp=sharing)
-
-### 🆘 **Getting Help**
-- **Documentation**: Comprehensive guides available
-- **Demo Videos**: Step-by-step tutorials
-- **Community Support**: Active development community
-- **Issues**: GitHub issues for bug reports
-
-### 🤝 **Contributing** 
-We welcome contributions to make EchoPay better for Arabic speakers worldwide:
-- **Bug Reports**: Help us identify and fix issues
-- **Feature Requests**: Suggest new banking features
-- **Arabic Language**: Help improve dialect support
-- **Accessibility**: Enhance features for disabled users
 
 ## 🌟 Our Mission
 
 > **"تمكين every Arabic speaker to access banking with dignity and independence"**
 
-EchoPay believes that banking should be accessible to everyone, regardless of age, visual ability, or technical skill. We're building the future of Arabic banking - one voice command at a time.
+أنس believes that banking should be accessible to everyone, regardless of age, visual ability, or technical skill. We're building the future of Arabic banking - one voice command at a time.
 
 ---
-
-## 📜 License
-
-This project is developed for educational and demonstration purposes. All banking data is simulated and no real financial transactions are processed.
 
 **أنس - Making Banking Accessible for Every Arabic Speaker** 🎙️💙
-
----
 
 *Built with ❤️ by Team تمكين (Tamkeen) - Enabling accessibility through voice technology*
