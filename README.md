@@ -1,6 +1,8 @@
 # أنس - المساعد المصرفي الصوتي 🏦🎙️
 
-**Team**: فريق تمكين (Team Tamkeen) | **Presentation**: [Google Slides](https://docs.google.com/presentation/d/1ppOjPNunknd7JnKiTOP17UTUkz_cXzlcb5v7WjXxlAs/edit?usp=sharing) | **Technical Docs**: [DEV.md](DEV.md)
+**Team**: فريق تمكين (Team Tamkeen)  
+**Presentation**: https://docs.google.com/presentation/d/1ppOjPNunknd7JnKiTOP17UTUkz_cXzlcb5v7WjXxlAs/edit?usp=sharing  
+**Technical Docs**: [DEV.md](DEV.md)
 
 > **أول مساعد مصرفي صوتي عربي شامل يجعل المصرفية متاحة للجميع**
 > **First comprehensive Arabic voice banking assistant that makes banking accessible for everyone**
@@ -8,6 +10,8 @@
 أنس يحول المصرفية التقليدية من واجهات بصرية معقدة إلى محادثات عربية طبيعية. سواء كنت من كبار السن، أو من ضعاف البصر، أو تفضل الكلام على اللمس، أنس يفهم احتياجاتك المصرفية ويستجيب بالعربية الواضحة.
 
 أنس transforms traditional banking from complex visual interfaces into natural Arabic conversations. Whether you're elderly, visually impaired, or simply prefer speaking over tapping, أنس understands your banking needs and responds in perfect Arabic.
+
+> **📋 Demo Note**: This is a hackathon demonstration using public environment variables for AI APIs. A production version would implement secure backend proxy services and encrypted API communication.
 
 ## 🌟 ما يجعل أنس مميزاً - What Makes أنس Special
 
